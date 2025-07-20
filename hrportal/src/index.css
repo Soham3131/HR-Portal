@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.nav-item {
+  @apply text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-200;
+}
+
+.mobile-link {
+  @apply block text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium;
+}
+
+/* globals.css */
+body {
+  @apply transition-colors duration-500;
+}
+
+html.light body {
+  background-image: theme('backgroundImage.gradient-light');
+}
+
+html.dark body {
+  background-image: theme('backgroundImage.gradient-dark');
+}

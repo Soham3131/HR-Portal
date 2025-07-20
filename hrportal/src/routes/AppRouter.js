@@ -1,0 +1,93 @@
+// src/routes/AppRouter.js
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from '../pages/HomePage';
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import EmployeeDashboard from '../pages/EmployeeDashboard';
+import EmployeeProfile from '../pages/EmployeeProfile';
+import HRDashboard from '../pages/HRDashboard';
+import HREmployeeView from '../pages/HREmployeeView';
+import NotFoundPage from '../pages/NotFoundPage';
+import ProtectedRoute from './ProtectedRoute';
+import RegisterHRPage from "../pages/registerHRPage"
+import EODReportsPage from "../pages/EODReportsPage"
+import ManageEmployeesPage from '../pages/ManageEmployeesPage';
+import SalaryCalculatorPage from '../pages/SalaryCalculatorPage';
+import EmployeeAnnouncements from '../pages/EmployeeAnnouncements';
+import AnnouncementsPage from '../pages/AnnouncmentsPage';
+import AnalyticsDashboard from '../pages/AnalyticsDashbaord';
+import GetDataPage from '../pages/GetDataPage';
+import ApplyForLeavePage from '../pages/ApplyForLeavePage';
+import ApproveLeavePage from '../pages/ApproveLeavePage';
+
+const AppRouter = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register-hr" element={<RegisterHRPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+      {/* Employee Protected Routes */}
+      <Route 
+        path="/employee/dashboard" 
+        element={
+          <ProtectedRoute roles={['employee']}>
+            <EmployeeDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/employee/profile" 
+        element={
+          <ProtectedRoute roles={['employee']}>
+            <EmployeeProfile />
+          </ProtectedRoute>
+        } 
+      />
+    <Route path="/employee/announcements" element={<ProtectedRoute roles={['employee']}><EmployeeAnnouncements /></ProtectedRoute>} />
+
+     <Route path="/employee/apply-leave" element={<ProtectedRoute roles={['employee']}><ApplyForLeavePage /></ProtectedRoute>} /> 
+
+
+      {/* HR Protected Routes */}
+      <Route 
+        path="/hr/dashboard" 
+        element={
+          <ProtectedRoute roles={['hr']}>
+            <HRDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/hr/employee/:id" 
+        element={
+          <ProtectedRoute roles={['hr']}>
+            <HREmployeeView />
+          </ProtectedRoute>
+        } 
+      />
+        <Route path="/hr/eod-reports" element={<ProtectedRoute roles={['hr']}><EODReportsPage /></ProtectedRoute>} />
+
+         <Route path="/hr/manage-employees" element={<ProtectedRoute roles={['hr']}><ManageEmployeesPage /></ProtectedRoute>} /> {/* New */}
+      <Route path="/hr/salary-calculator" element={<ProtectedRoute roles={['hr']}><SalaryCalculatorPage /></ProtectedRoute>} /> {/* New */}
+
+       <Route path="/hr/announcements" element={<ProtectedRoute roles={['hr']}><AnnouncementsPage /></ProtectedRoute>} />
+
+       <Route path="/hr/analytics" element={<ProtectedRoute roles={['hr']}><AnalyticsDashboard /></ProtectedRoute>} />
+      
+      <Route path="/hr/getdata" element={<ProtectedRoute roles={['hr']}><GetDataPage /></ProtectedRoute>} />
+     
+      <Route path="/hr/approve-leave" element={<ProtectedRoute roles={['hr']}><ApproveLeavePage /></ProtectedRoute>} />
+
+      {/* Catch-all Not Found Route */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+};
+
+export default AppRouter;

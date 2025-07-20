@@ -1,0 +1,48 @@
+# =====================
+# Node.js Dependencies
+# =====================
+node_modules/
+**/node_modules/
+
+# =====================
+# Build and Dist Folders
+# =====================
+build/
+dist/
+**/build/
+**/dist/
+
+# =====================
+# Environment Variables
+# =====================
+.env
+.env.*
+!*.env.example  # keep example env files
+
+# =====================
+# Log Files
+# =====================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =====================
+# System Files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# IDE Specific
+# =====================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =====================
+# Optional: OS/Package Lock Files
+# =====================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
