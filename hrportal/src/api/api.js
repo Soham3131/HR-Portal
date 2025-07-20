@@ -2,14 +2,17 @@
 import axios from 'axios';
 
 // Create an instance of axios
+import axios from 'axios';
+
 const api = axios.create({
-  // Use the backend URL you have set up.
-  // Make sure your backend server is running.
-  baseURL: 'http://localhost:5000/api', 
+  // Use the environment variable for the backend URL
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export default api;
 
 /*
   Intercepts every request. If a token exists in localStorage,
