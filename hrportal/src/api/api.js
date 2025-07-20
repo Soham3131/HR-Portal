@@ -1,8 +1,7 @@
 // src/api/api.js
 import axios from 'axios';
 
-// Create an instance of axios
-import axios from 'axios';
+
 
 const api = axios.create({
   // Use the environment variable for the backend URL
@@ -12,7 +11,7 @@ const api = axios.create({
   },
 });
 
-export default api;
+
 
 /*
   Intercepts every request. If a token exists in localStorage,
