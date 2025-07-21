@@ -687,7 +687,11 @@ const EmployeeDashboard = () => {
 
     useEffect(() => {
         const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
+        // --- CHANGE: This now ONLY checks for a standard mobile user agent ---
+        // This will be false if the user selects "Desktop site", allowing them to proceed,
+        // but the 'isTouchDevice' check in handleCheckIn will still correctly identify them.
         const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        
         setIsMobile(isMobileUA);
     }, []);
 
@@ -731,6 +735,8 @@ const EmployeeDashboard = () => {
 
     const handleCheckIn = async (status) => {
         try {
+            // This logic correctly captures touch capability, which will be true
+            // on a mobile device even in "Desktop site" mode.
             const deviceInfo = navigator.userAgent;
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             
@@ -778,6 +784,7 @@ const EmployeeDashboard = () => {
         }
     };
 
+    // This block will now only render for standard mobile views.
     if (isMobile) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center p-4">
@@ -789,6 +796,7 @@ const EmployeeDashboard = () => {
 
     if (loading) return <div className="flex justify-center items-center h-64"><Spinner /></div>;
 
+    // This will render for desktops and for "Desktop site" on mobile
     return (
         <div className="space-y-6 p-6">
             <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}!</h1>
