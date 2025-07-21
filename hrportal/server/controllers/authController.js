@@ -235,7 +235,11 @@ exports.loginEmployee = async (req, res) => {
             });
             await newLoginRecord.save();
             
-            res.json({ /* ... response data ... */ });
+            res.json({  _id: employee._id,
+                name: employee.name,
+                email: employee.email,
+                role: 'employee',
+                token: generateToken(employee._id, 'employee'), });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
         }
@@ -243,3 +247,4 @@ exports.loginEmployee = async (req, res) => {
         res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
+
