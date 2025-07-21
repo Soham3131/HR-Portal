@@ -13,11 +13,7 @@ const api = axios.create({
 
 
 
-/*
-  Intercepts every request. If a token exists in localStorage,
-  it adds the 'Authorization: Bearer <token>' header to the request.
-  This is crucial for accessing protected backend routes.
-*/
+
 api.interceptors.request.use(
   (config) => {
     const userInfo = localStorage.getItem('userInfo');
