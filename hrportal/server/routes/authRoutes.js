@@ -16,7 +16,7 @@ router.post('/register/verify', verifyAndRegister);
 
 // @route   POST api/auth/register/hr
 // @desc    Register a new HR user
-router.post('/register/hr', registerHR);
+router.post('/register-hr', registerHR);
 
 // @route   POST api/auth/login/employee
 // @desc    Authenticate employee & get token
