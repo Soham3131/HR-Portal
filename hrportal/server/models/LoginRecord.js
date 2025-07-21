@@ -1,3 +1,4 @@
+// models/LoginRecord.js
 const mongoose = require('mongoose');
 
 const loginRecordSchema = new mongoose.Schema({
@@ -17,13 +18,16 @@ const loginRecordSchema = new mongoose.Schema({
     },
     ipAddress: {
         type: String,
+    },
+    // --- NEW FIELD ---
+    // This will be true if the browser reports touch capabilities.
+    isTouchDevice: {
+        type: Boolean,
+        default: false,
     }
-}, { timestamps: true }); // timestamps adds createdAt and updatedAt automatically
+}, { timestamps: true });
 
-// --- NEW: TTL Index for Automatic Deletion after 7 days ---
-// This tells MongoDB to automatically delete documents from this collection
-// 7 days (604800 seconds) after their 'createdAt' timestamp.
-loginRecordSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+loginRecordSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 }); // 7-day expiry
 
 const LoginRecord = mongoose.model('LoginRecord', loginRecordSchema);
 module.exports = LoginRecord;

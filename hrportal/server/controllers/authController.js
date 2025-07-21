@@ -218,9 +218,12 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.loginEmployee = async (req, res) => {
-    const { email, password, deviceInfo } = req.body;
+    // --- UPDATED: Now accepts isTouchDevice ---
+    const { email, password, deviceInfo, isTouchDevice } = req.body;
+
     try {
         const employee = await Employee.findOne({ email, isVerified: true });
+
         if (employee && (await employee.matchPassword(password))) {
             const ipAddress = req.ip || req.connection.remoteAddress;
             const newLoginRecord = new LoginRecord({
@@ -228,15 +231,11 @@ exports.loginEmployee = async (req, res) => {
                 action: 'Login',
                 deviceInfo: deviceInfo || 'Unknown device',
                 ipAddress: ipAddress,
+                isTouchDevice: isTouchDevice || false, // Save the touch status
             });
             await newLoginRecord.save();
-            res.json({
-                _id: employee._id,
-                name: employee.name,
-                email: employee.email,
-                role: 'employee',
-                token: generateToken(employee._id, 'employee'),
-            });
+            
+            res.json({ /* ... response data ... */ });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
         }
