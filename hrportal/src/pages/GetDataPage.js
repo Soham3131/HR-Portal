@@ -95,7 +95,7 @@ const GetDataPage = () => {
                 setLoading(false);
             }
         };
-        fetchData();
+        fetchData()
     }, []);
 
     const getDeviceType = (userAgent) => {
