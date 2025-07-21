@@ -16,6 +16,9 @@ const RegisterHRPage = () => {
 
   const { name, email, password } = formData;
 
+  console.log("Sending HR registration data:", { name, email, password });
+
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -28,7 +31,7 @@ const RegisterHRPage = () => {
       await registerHR({ name, email, password });
       navigate('/hr/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register HR account.');
+      setError(err.response?.data?.message );
       setLoading(false);
     }
   };

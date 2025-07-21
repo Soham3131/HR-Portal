@@ -4,6 +4,8 @@ import api from '../api/api';
 
 const AuthContext = createContext(null);
 
+console.log("API Base URL:", process.env.REACT_APP_API_URL);
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
