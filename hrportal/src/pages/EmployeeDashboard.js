@@ -245,12 +245,25 @@ const EmployeeDashboard = () => {
     const [notes, setNotes] = useState('');
     const [requestedLeaveType, setRequestedLeaveType] = useState(null);
 
-    useEffect(() => {
-        const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
-        const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-        setIsMobile(mobile);
-    }, []);
+    // useEffect(() => {
+    //     const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
+    //     const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    //     setIsMobile(mobile);
+    // }, []);
 
+      useEffect(() => {
+        const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
+        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isSmallScreen = window.screen.width < 900 || window.screen.height < 900;
+
+        // If it has touch capabilities AND a small screen, it's very likely a mobile device,
+        // even if they are using "Desktop site" mode.
+        if ((hasTouch && isSmallScreen) || isMobileUA) {
+            setIsMobile(true);
+        }
+    }, []);
+    
     const fetchData = async () => {
         try {
             setLoading(true);
