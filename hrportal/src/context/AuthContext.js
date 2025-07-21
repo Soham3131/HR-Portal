@@ -40,6 +40,12 @@ export const AuthProvider = ({ children }) => {
     const { data } = await api.post('/auth/register/request-otp', userData);
     return data; // Return the success message
   };
+ 
+  const registerHR = async ({ name, email, password }) => {
+  const { data } = await api.post('/auth/register-hr', { name, email, password });
+  localStorage.setItem('userInfo', JSON.stringify({ ...data, role: 'hr' }));
+  setUser({ ...data, role: 'hr' });
+};
 
   const verifyAndRegister = async (email, otp) => {
     const { data } = await api.post('/auth/register/verify', { email, otp });
@@ -77,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,          // Updated
     isAuthenticated: !!user,
     loading,
+    registerHR
   };
 
   return (
