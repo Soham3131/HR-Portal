@@ -1,4 +1,5 @@
-import { useTheme } from 'next-themes'
+// import { useTheme } from 'next-themes'
+import {useTheme} from "../context/ThemeContext"
 import { Sun, Moon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

@@ -160,7 +160,8 @@ import HREmployeeDetails from "../components/HREmployeeDetails";
 import StatCard from '../components/StatCard';
 import EditAttendanceModal from '../components/EditAttendanceModal';
 import Modal from '../components/Modal';
-import { useTheme } from 'next-themes';
+// import { useTheme } from 'next-themes';
+import { useTheme } from '../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
 
 const HRDashboard = () => {

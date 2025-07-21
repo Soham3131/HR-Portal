@@ -227,7 +227,8 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Spinner from '../components/Spinner';
 import ThemeToggle from '../components/ThemeToggle';
-import { useTheme } from 'next-themes';
+// import { useTheme } from 'next-themes';
+import { useTheme } from '../context/ThemeContext';
 
 const EmployeeDashboard = () => {
     const { user } = useAuth();
