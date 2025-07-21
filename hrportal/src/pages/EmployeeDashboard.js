@@ -449,9 +449,9 @@ import Modal from '../components/Modal';
 import Spinner from '../components/Spinner';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from "../components/ThemeToggle"
+
 const EmployeeDashboard = () => {
     const { user } = useAuth();
-    const { theme } = useTheme();
     const [profile, setProfile] = useState(null);
     const [attendance, setAttendance] = useState([]);
     const [todayAttendance, setTodayAttendance] = useState(null);
@@ -466,11 +466,7 @@ const EmployeeDashboard = () => {
 
     useEffect(() => {
         const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
-        // --- CHANGE: This now ONLY checks for a standard mobile user agent ---
-        // This will be false if the user selects "Desktop site", allowing them to proceed,
-        // but the 'isTouchDevice' check in handleCheckIn will still correctly identify them.
         const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-        
         setIsMobile(isMobileUA);
     }, []);
 
@@ -514,8 +510,6 @@ const EmployeeDashboard = () => {
 
     const handleCheckIn = async (status) => {
         try {
-            // This logic correctly captures touch capability, which will be true
-            // on a mobile device even in "Desktop site" mode.
             const deviceInfo = navigator.userAgent;
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             
@@ -563,7 +557,6 @@ const EmployeeDashboard = () => {
         }
     };
 
-    // This block will now only render for standard mobile views.
     if (isMobile) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center p-4">
@@ -575,13 +568,9 @@ const EmployeeDashboard = () => {
 
     if (loading) return <div className="flex justify-center items-center h-64"><Spinner /></div>;
 
-    // This will render for desktops and for "Desktop site" on mobile
     return (
-        <div className={`min-h-screen px-6 py-8 transition-all duration-500 ${theme === 'dark' ? 'bg-gradient-dark text-white' : 'bg-gradient-light text-gray-900'}`}>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}!</h1>
-                <ThemeToggle />
-            </div>
+        <div className="space-y-6 p-6">
+            <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}!</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard title="Employee ID" value={profile?.employeeId ?? 'N/A'} />
@@ -589,14 +578,14 @@ const EmployeeDashboard = () => {
                 <StatCard title="Holidays Left" value={profile?.holidaysLeft ?? 'N/A'} />
             </div>
 
-            <div className="grid grid-cols-1 mt-6 mb-8">
-                <div className="bg-white/80 dark:bg-white/10 p-6 rounded-lg shadow-lg backdrop-blur-sm">
+            <div className="grid grid-cols-1">
+                <div className="bg-white p-6 rounded-lg shadow-lg">
                     <h3 className="font-semibold text-lg mb-4">Today's Attendance</h3>
                     {todayAttendance ? (
                         <div className="space-y-2">
-                            <p>Status: <span className="font-bold text-green-600 dark:text-green-400">{todayAttendance.status}</span></p>
+                            <p>Status: <span className="font-bold text-green-600">{todayAttendance.status}</span></p>
                             <p>Checked In: <span className="font-bold">{new Date(todayAttendance.checkIn).toLocaleTimeString()}</span></p>
-                            {todayAttendance.notes && <p>Notes: <span className="italic text-gray-600 dark:text-gray-300">{todayAttendance.notes}</span></p>}
+                            {todayAttendance.notes && <p>Notes: <span className="italic text-gray-600">{todayAttendance.notes}</span></p>}
                             {todayAttendance.checkOut ? (
                                 <p>Checked Out: <span className="font-bold">{new Date(todayAttendance.checkOut).toLocaleTimeString()}</span></p>
                             ) : (
@@ -612,7 +601,7 @@ const EmployeeDashboard = () => {
             <AttendanceLog attendance={attendance} />
 
             <Modal isOpen={isCheckInModalOpen} onClose={() => setCheckInModalOpen(false)} title="Mark Your Attendance">
-                <div className="space-y-4 ">
+                <div className="space-y-4">
                     <p>How would you like to mark your attendance?</p>
                     <div className="flex justify-around">
                         <Button onClick={() => handleCheckIn('Present')}>Full Day</Button>
