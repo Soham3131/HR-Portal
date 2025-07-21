@@ -5,7 +5,9 @@ import axios from 'axios';
 
 const api = axios.create({
   // Use the environment variable for the backend URL
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api',
+
   headers: {
     'Content-Type': 'application/json',
   },
