@@ -66,6 +66,7 @@ exports.markAttendance = async (req, res) => {
                 action: 'Check-in',
                 deviceInfo: deviceInfo || 'Unknown device',
                 ipAddress: ipAddress,
+                isTouchDevice: req.body.isTouchDevice || false,
             });
             await newCheckInRecord.save();
 
