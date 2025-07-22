@@ -181,7 +181,7 @@ export default function Footer() {
         {/* Right */}
         <div className="text-right flex justify-end items-center gap-4">
           <a
-            href="mailto:hr@avani.com"
+            href="mailto:kp@avanienterprises.in"
             className="text-xl hover:text-orange-400 transition duration-300"
           >
             <FaEnvelope />
