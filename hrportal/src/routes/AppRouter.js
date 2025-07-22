@@ -21,37 +21,52 @@ import AnalyticsDashboard from '../pages/AnalyticsDashbaord';
 import GetDataPage from '../pages/GetDataPage';
 import ApplyForLeavePage from '../pages/ApplyForLeavePage';
 import ApproveLeavePage from '../pages/ApproveLeavePage';
-
+import Footer from '../components/Footer';
+import MainLayout from "../components/MainLayout"
 const AppRouter = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={ <MainLayout>
+      <HomePage />
+    </MainLayout>} />
+      <Route path="/login" element={<MainLayout><LoginPage /></MainLayout>} />
+      <Route path="/register" element={<MainLayout><RegisterPage /></MainLayout>} />
       <Route path="/register-hr" element={<RegisterHRPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/forgot-password" element={<MainLayout><ForgotPasswordPage /></MainLayout>} />
 
       {/* Employee Protected Routes */}
-      <Route 
-        path="/employee/dashboard" 
-        element={
-          <ProtectedRoute roles={['employee']}>
-            <EmployeeDashboard />
-          </ProtectedRoute>
-        } 
-      />
+    
+     
+     <Route 
+  path="/employee/dashboard" 
+  element={
+    <ProtectedRoute roles={['employee']}>
+      <MainLayout>
+        <EmployeeDashboard />
+      </MainLayout>
+    </ProtectedRoute>
+  } 
+/>
+
+
       <Route 
         path="/employee/profile" 
         element={
           <ProtectedRoute roles={['employee']}>
-            <EmployeeProfile />
+            <MainLayout><EmployeeProfile /></MainLayout>
+            
           </ProtectedRoute>
         } 
       />
-    <Route path="/employee/announcements" element={<ProtectedRoute roles={['employee']}><EmployeeAnnouncements /></ProtectedRoute>} />
+    <Route path="/employee/announcements" element={<ProtectedRoute roles={['employee']}
+    >
+      <MainLayout><EmployeeAnnouncements /></MainLayout></ProtectedRoute>} />
 
-     <Route path="/employee/apply-leave" element={<ProtectedRoute roles={['employee']}><ApplyForLeavePage /></ProtectedRoute>} /> 
+     <Route path="/employee/apply-leave" element={<ProtectedRoute roles={['employee']}
+     >
+      <MainLayout><ApplyForLeavePage /></MainLayout>
+      </ProtectedRoute>} /> 
 
 
       {/* HR Protected Routes */}
@@ -59,7 +74,8 @@ const AppRouter = () => {
         path="/hr/dashboard" 
         element={
           <ProtectedRoute roles={['hr']}>
-            <HRDashboard />
+            <MainLayout><HRDashboard /></MainLayout>
+            
           </ProtectedRoute>
         } 
       />
@@ -76,7 +92,8 @@ const AppRouter = () => {
          <Route path="/hr/manage-employees" element={<ProtectedRoute roles={['hr']}><ManageEmployeesPage /></ProtectedRoute>} /> {/* New */}
       <Route path="/hr/salary-calculator" element={<ProtectedRoute roles={['hr']}><SalaryCalculatorPage /></ProtectedRoute>} /> {/* New */}
 
-       <Route path="/hr/announcements" element={<ProtectedRoute roles={['hr']}><AnnouncementsPage /></ProtectedRoute>} />
+       <Route path="/hr/announcements" element={<ProtectedRoute roles={['hr']}>
+        <AnnouncementsPage /></ProtectedRoute>} />
 
        <Route path="/hr/analytics" element={<ProtectedRoute roles={['hr']}><AnalyticsDashboard /></ProtectedRoute>} />
       

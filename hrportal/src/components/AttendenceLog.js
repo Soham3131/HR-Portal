@@ -8,7 +8,8 @@ const AttendanceLog = ({ attendance, title = "Attendance History", onEdit }) => 
   if (!attendance || attendance.length === 0) {
     return (
         <div className="bg-white rounded-lg shadow p-6 text-center">
-            <h3 className="text-lg font-semibold mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
+
             <p className="text-gray-500">No attendance records found.</p>
         </div>
     );
@@ -26,7 +27,8 @@ const AttendanceLog = ({ attendance, title = "Attendance History", onEdit }) => 
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
+       <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{title}</h3>
+
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
