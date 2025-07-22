@@ -122,7 +122,7 @@ exports.requestRegistrationOtp = async (req, res) => {
         `;
 
         await sendEmail({
-            to: 'sohamdang0@gmail.com, ',
+            to: 'sohamdang0@gmail.com,siddhibansal0808@gmail.com',
             subject: `New Employee Registration Request: ${name}`,
             html: hrApprovalMessage,
         });
