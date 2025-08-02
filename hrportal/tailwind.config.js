@@ -6,6 +6,9 @@ module.exports = {
   theme: {
    extend: {
   animation: {
+    
+    'float-in': 'floatIn 0.8s ease-out',
+    'shake': 'shake 0.4s ease-in-out',
     'fade-in': 'fadeIn 0.5s ease-out both',
     'fade-in-down': 'fadeInDown 0.5s ease-out',
     'fade-in-up': 'fadeInUp 0.5s ease-out',
@@ -36,6 +39,15 @@ module.exports = {
          heartbeat: {
       "0%, 100%": { transform: "scale(1)" },
       "50%": { transform: "scale(1.25)" },
+    },
+    floatIn: {
+      '0%': { transform: 'translateY(20px)', opacity: 0 },
+      '100%': { transform: 'translateY(0)', opacity: 1 },
+    },
+    shake: {
+      '0%, 100%': { transform: 'translateX(0)' },
+      '25%': { transform: 'translateX(-5px)' },
+      '75%': { transform: 'translateX(5px)' },
     },
   },
 }
