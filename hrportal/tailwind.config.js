@@ -9,6 +9,8 @@ module.exports = {
     'fade-in': 'fadeIn 0.5s ease-out both',
     'fade-in-down': 'fadeInDown 0.5s ease-out',
     'fade-in-up': 'fadeInUp 0.5s ease-out',
+    'floating': "float 6s ease-in-out infinite",
+    'heartbeat': "heartbeat 1.5s ease-in-out infinite",
   },
   backgroundImage: {
         'gradient-light': 'linear-gradient(to right, #e0eafc, #cfdef3)',
@@ -19,6 +21,10 @@ module.exports = {
       '0%': { opacity: 0, transform: 'translateY(-10px)' },
       '100%': { opacity: 1, transform: 'translateY(0)' },
     },
+    float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
     fadeInUp: {
       '0%': { opacity: 0, transform: 'translateY(10px)' },
       '100%': { opacity: 1, transform: 'translateY(0)' },
@@ -27,6 +33,10 @@ module.exports = {
           '0%': { opacity: 0 },
           '100%': { opacity: 1 },
         },
+         heartbeat: {
+      "0%, 100%": { transform: "scale(1)" },
+      "50%": { transform: "scale(1.25)" },
+    },
   },
 }
   },

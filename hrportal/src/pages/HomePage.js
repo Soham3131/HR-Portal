@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Button from '../components/Button';
+import MotivationalQuotes from '../components/MotivationalQuotes';
 
 const HomePage = () => {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ const HomePage = () => {
           </>
         )}
       </div>
+      
     </div>
   );
 };

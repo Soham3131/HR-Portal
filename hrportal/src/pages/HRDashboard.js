@@ -163,6 +163,7 @@ import Modal from '../components/Modal';
 // import { useTheme } from 'next-themes';
 import { useTheme } from '../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
+import MotivationalQuotes from '../components/MotivationalQuotes';
 
 const HRDashboard = () => {
     const { theme, setTheme } = useTheme();
@@ -303,6 +304,10 @@ const HRDashboard = () => {
                     </table>
                 </div>
             </Modal>
+           <div className="w-full overflow-x-auto">
+  <MotivationalQuotes />
+</div>
+
         </div>
     );
 };
