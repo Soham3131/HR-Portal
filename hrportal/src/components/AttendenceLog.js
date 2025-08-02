@@ -2,12 +2,18 @@
 import React from 'react';
 import { formatDate, formatTime } from "../utils/formatDate"
 import Button from '../components/Button';
+import MotivationalQuotes from './MotivationalQuotes';
 
 
 const AttendanceLog = ({ attendance, title = "Attendance History", onEdit }) => {
   if (!attendance || attendance.length === 0) {
     return (
         <div className="bg-white rounded-lg shadow p-6 text-center">
+
+            <div className="w-full overflow-x-auto">
+  <MotivationalQuotes />
+</div>
+
             <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
 
             <p className="text-gray-500">No attendance records found.</p>

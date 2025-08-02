@@ -207,9 +207,9 @@ const EmployeeDashboard = () => {
                     <Button onClick={handleCheckOut} className="w-full mt-4">Submit EOD and Check Out</Button>
                 </div>
             </Modal>
-            <div className="w-full overflow-x-auto">
+            {/* <div className="w-full overflow-x-auto">
   <MotivationalQuotes />
-</div>
+</div> */}
 
         </div>
     );
