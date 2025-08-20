@@ -127,6 +127,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEnvelope, FaLinkedin } from 'react-icons/fa';
+import logo from "../assets/logo1.png"
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   const [showBigHeart, setShowBigHeart] = useState(false);
@@ -159,7 +161,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
         {/* Left */}
         <div className="text-left">
-          <h2 className="text-2xl font-bold">Avani Enterprises</h2>
+          <Link to="/" className="flex items-center gap-3 hover:scale-105 transition">
+    <img src={logo} alt="Avani Enterprises Logo" className="h-[5rem] mt-2 w-auto" />
+    <span className="text-2xl font-bold tracking-wide">
+        AVANI ENTERPRISES
+    </span>
+</Link>
+         
           <p className="italic text-sm mt-2 text-white/80">
             Empowering workforce with trust & technology
           </p>

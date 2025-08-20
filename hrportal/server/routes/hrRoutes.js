@@ -19,8 +19,10 @@ const {
     getLoginData,
     getPendingLeaves,
       // <-- Import new function
-    updateLeaveStatus  
+    updateLeaveStatus  ,
+    calculatePayroll,getEmployeeRankings
 } = require('../controllers/hrController');
+
 const { protectHR } = require('../middleware/authMiddleware');
 
 router.get('/employees', protectHR, getAllEmployees);
@@ -49,4 +51,6 @@ router.get('/getdata', protectHR, getLoginData);
 // --- NEW LEAVE MANAGEMENT ROUTES ---
 router.get('/leaves/pending', protectHR, getPendingLeaves);
 router.put('/leaves/:id/status', protectHR, updateLeaveStatus);
+router.get('/payroll', protectHR, calculatePayroll);
+router.get('/rankings', protectHR, getEmployeeRankings);
 module.exports = router;

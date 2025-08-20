@@ -8,7 +8,7 @@ const {
     getAnnouncementsForEmployee,
     markAnnouncementsAsRead,
     applyForLeave,
-    getLeaveHistory
+    getLeaveHistory,getEmployeeRankings
 } = require('../controllers/employeeController');
 const { protectEmployee } = require('../middleware/authMiddleware');
 
@@ -21,5 +21,6 @@ router.post('/announcements/read', protectEmployee, markAnnouncementsAsRead);
 
 router.post('/leave', protectEmployee, applyForLeave);
 router.get('/leave/history', protectEmployee, getLeaveHistory)
+router.get('/rankings', protectEmployee, getEmployeeRankings);
 
 module.exports = router;
