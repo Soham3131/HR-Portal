@@ -147,10 +147,18 @@ const EmployeeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a department'],
     },
-    phone: String,
-    address: String,
-    dob: Date,
-    joiningDate: Date,
+    phone: {
+        type: String,
+    },
+    address: {
+        type: String,
+    },
+    dob: {
+        type: Date,
+    },
+    joiningDate: {
+        type: Date,
+    },
     salary: {
         type: Number,
         default: 0,
@@ -168,8 +176,12 @@ const EmployeeSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    otp: String,
-    otpExpires: Date,
+    otp: {
+        type: String,
+    },
+    otpExpires: {
+        type: Date,
+    },
     holidaysLeft: {
         type: Number,
         default: 2,
@@ -179,44 +191,45 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['Active', 'Deactivated'],
         default: 'Active',
     },
-    deactivationDate: Date,
+    deactivationDate: {
+        type: Date,
+    },
     readAnnouncements: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Announcement'
     }],
 }, { timestamps: true });
 
-
-// --- Pre-save hook ---
-EmployeeSchema.pre('save', async function (next) {
-    try {
-        if (this.isNew && !this.employeeId) {
-            const lastEmployee = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
-            let newIdNumber = 1001;
-            if (lastEmployee && lastEmployee.employeeId) {
-                const lastIdNumber = parseInt(lastEmployee.employeeId.split('-')[1]);
-                newIdNumber = lastIdNumber + 1;
-            }
-            this.employeeId = `AVANI-${newIdNumber}`;
+// --- THIS IS THE CORRECTED LOGIC ---
+EmployeeSchema.pre('save', async function(next) {
+    // Generate Employee ID only if it's a new employee and doesn't have one
+    if (this.isNew && !this.employeeId) {
+        // Find the employee with the numerically highest ID, not the most recently created one.
+        const lastEmployee = await this.constructor.findOne({ employeeId: { $regex: /^AVANI-/ } }).sort({ employeeId: -1 });
+        
+        let newIdNumber = 1001;
+        if (lastEmployee && lastEmployee.employeeId) {
+            const lastIdNumber = parseInt(lastEmployee.employeeId.split('-')[1]);
+            newIdNumber = lastIdNumber + 1;
         }
-
-        if (!this.isModified('password')) {
-            return next();
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (err) {
-        next(err);
+        this.employeeId = `AVANI-${newIdNumber}`;
     }
+
+    // Hash the password ONLY if it has been modified (or is new).
+    if (!this.isModified('password')) {
+        return next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
-
-// --- Password compare method ---
-EmployeeSchema.methods.matchPassword = async function (enteredPassword) {
+EmployeeSchema.methods.matchPassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// --- Add TTL index for automatic deletion of deactivated employees ---
+EmployeeSchema.index({ deactivationDate: 1 }, { expireAfterSeconds: 2592000 }); // 30 days
 
 const Employee = mongoose.model('Employee', EmployeeSchema);
 module.exports = Employee;

@@ -44,32 +44,17 @@ const RegisterPage = () => {
     setLoading(false);
   };
 
-  // const handleVerifyOtp = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   try {
-  //     await verifyAndRegister(formData.email, otp);
-  //     navigate('/employee/dashboard');
-  //   } catch (err) {
-  //     setError(err.response?.data?.message || 'Verification failed.');
-  //   }
-  //   setLoading(false);
-  // };
-
   const handleVerifyOtp = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-  try {
-    const cleanEmail = formData.email.trim().toLowerCase();
-    const cleanOtp = otp.trim();
-    await verifyAndRegister(cleanEmail, cleanOtp);
-    navigate('/employee/dashboard');
-  } catch (err) {
-    setError(err.response?.data?.message || 'Verification failed.');
-  }
-  setLoading(false);
-};
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await verifyAndRegister(formData.email, otp);
+      navigate('/employee/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Verification failed.');
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 flex justify-center items-center p-4">
