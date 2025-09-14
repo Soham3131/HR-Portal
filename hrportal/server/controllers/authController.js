@@ -254,20 +254,18 @@ exports.requestRegistrationOtp = async (req, res) => {
 //     }
 // };
 
-// @desc    Step 2: Verify OTP and finalize registration
 exports.verifyAndRegister = async (req, res) => {
     try {
         let { email, otp } = req.body;
+        console.log("📥 Incoming verify request:", req.body);
 
-        // Normalize inputs
         if (!email || !otp) {
             return res.status(400).json({ message: 'Email and OTP are required.' });
         }
 
         email = email.trim().toLowerCase();
-        otp = otp.toString().trim();  // Ensure OTP is always treated as string
+        otp = otp.toString().trim();
 
-        // Find employee with matching email + otp that is not expired
         const employee = await Employee.findOne({
             email,
             otp,
@@ -275,10 +273,10 @@ exports.verifyAndRegister = async (req, res) => {
         });
 
         if (!employee) {
+            console.log("❌ No employee found or OTP expired");
             return res.status(400).json({ message: 'Invalid OTP or OTP has expired.' });
         }
 
-        // Mark as verified
         employee.isVerified = true;
         employee.otp = undefined;
         employee.otpExpires = undefined;
