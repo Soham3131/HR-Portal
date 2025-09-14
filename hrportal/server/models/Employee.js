@@ -147,18 +147,10 @@ const EmployeeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a department'],
     },
-    phone: {
-        type: String,
-    },
-    address: {
-        type: String,
-    },
-    dob: {
-        type: Date,
-    },
-    joiningDate: {
-        type: Date,
-    },
+    phone: String,
+    address: String,
+    dob: Date,
+    joiningDate: Date,
     salary: {
         type: Number,
         default: 0,
@@ -176,12 +168,8 @@ const EmployeeSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    otp: {
-        type: String,
-    },
-    otpExpires: {
-        type: Date,
-    },
+    otp: String,
+    otpExpires: Date,
     holidaysLeft: {
         type: Number,
         default: 2,
@@ -191,9 +179,7 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['Active', 'Deactivated'],
         default: 'Active',
     },
-    deactivationDate: {
-        type: Date,
-    },
+    deactivationDate: Date,
     readAnnouncements: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Announcement'
@@ -204,7 +190,6 @@ const EmployeeSchema = new mongoose.Schema({
 // --- Pre-save hook ---
 EmployeeSchema.pre('save', async function (next) {
     try {
-        // Generate Employee ID only if it's a new employee
         if (this.isNew && !this.employeeId) {
             const lastEmployee = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
             let newIdNumber = 1001;
@@ -215,38 +200,15 @@ EmployeeSchema.pre('save', async function (next) {
             this.employeeId = `AVANI-${newIdNumber}`;
         }
 
-        // Hash the password ONLY if it has been modified (or is new).
         if (!this.isModified('password')) {
             return next();
         }
+
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
         next();
     } catch (err) {
         next(err);
-    }
-});
-
-
-// --- Handle duplicate key error (retry logic) ---
-EmployeeSchema.post('save', async function (error, doc, next) {
-    if (error && error.name === 'MongoServerError' && error.code === 11000 && error.keyPattern.employeeId) {
-        // Retry logic for duplicate employeeId
-        try {
-            const lastEmployee = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
-            let newIdNumber = 1001;
-            if (lastEmployee && lastEmployee.employeeId) {
-                const lastIdNumber = parseInt(lastEmployee.employeeId.split('-')[1]);
-                newIdNumber = lastIdNumber + 1;
-            }
-            this.employeeId = `AVANI-${newIdNumber}`;
-            await this.save(); // retry save
-            next();
-        } catch (retryErr) {
-            next(retryErr);
-        }
-    } else {
-        next(error);
     }
 });
 

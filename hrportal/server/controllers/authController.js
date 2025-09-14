@@ -88,7 +88,6 @@ exports.loginHR = async (req, res) => {
     }
 };
 
-
 exports.requestRegistrationOtp = async (req, res) => {
     const { name, email, password, department, phone, address, dob } = req.body;
 
@@ -105,13 +104,61 @@ exports.requestRegistrationOtp = async (req, res) => {
         if (employee && !employee.isVerified) {
             // Update existing unverified user
             Object.assign(employee, { name, password, department, phone, address, dob, otp, otpExpires });
-            await employee.save();
+
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    await employee.save();
+                    break;
+                } catch (err) {
+                    if (err.code === 11000 && err.keyPattern && err.keyPattern.employeeId) {
+                        // Duplicate employeeId → regenerate and retry
+                        const lastEmployee = await Employee.findOne({}, {}, { sort: { 'createdAt': -1 } });
+                        let newIdNumber = 1001;
+                        if (lastEmployee && lastEmployee.employeeId) {
+                            const lastIdNumber = parseInt(lastEmployee.employeeId.split('-')[1]);
+                            newIdNumber = lastIdNumber + 1;
+                        }
+                        employee.employeeId = `AVANI-${newIdNumber}`;
+                        retries--;
+                    } else {
+                        throw err;
+                    }
+                }
+            }
+
         } else {
-            // Create a new, unverified employee record
-            employee = await Employee.create({ name, email, password, department, phone, address, dob, otp, otpExpires });
+            // Create a new, unverified employee record with retry logic
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    employee = await Employee.create({ 
+                        name, email, password, department, phone, address, dob, otp, otpExpires 
+                    });
+                    break;
+                } catch (err) {
+                    if (err.code === 11000 && err.keyPattern && err.keyPattern.employeeId) {
+                        // Duplicate employeeId → regenerate and retry
+                        const lastEmployee = await Employee.findOne({}, {}, { sort: { 'createdAt': -1 } });
+                        let newIdNumber = 1001;
+                        if (lastEmployee && lastEmployee.employeeId) {
+                            const lastIdNumber = parseInt(lastEmployee.employeeId.split('-')[1]);
+                            newIdNumber = lastIdNumber + 1;
+                        }
+                        // Manually create doc and retry save
+                        employee = new Employee({ 
+                            name, email, password, department, phone, address, dob, otp, otpExpires,
+                            employeeId: `AVANI-${newIdNumber}`
+                        });
+                        retries--;
+                    } else {
+                        throw err;
+                    }
+                }
+            }
         }
 
-        // --- CHANGE: Send the OTP email ONLY to the HR admins ---
+        // --- Send OTP email to HR admins ---
         const hrApprovalMessage = `
             <p>A new employee has requested to join the AVANI ENTERPRISES portal.</p>
             <p><b>Name:</b> ${name}</p>
@@ -133,6 +180,51 @@ exports.requestRegistrationOtp = async (req, res) => {
         res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
+
+// exports.requestRegistrationOtp = async (req, res) => {
+//     const { name, email, password, department, phone, address, dob } = req.body;
+
+//     try {
+//         let employee = await Employee.findOne({ email });
+
+//         if (employee && employee.isVerified) {
+//             return res.status(400).json({ message: 'An active account with this email already exists.' });
+//         }
+
+//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//         const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+//         if (employee && !employee.isVerified) {
+//             // Update existing unverified user
+//             Object.assign(employee, { name, password, department, phone, address, dob, otp, otpExpires });
+//             await employee.save();
+//         } else {
+//             // Create a new, unverified employee record
+//             employee = await Employee.create({ name, email, password, department, phone, address, dob, otp, otpExpires });
+//         }
+
+//         // --- CHANGE: Send the OTP email ONLY to the HR admins ---
+//         const hrApprovalMessage = `
+//             <p>A new employee has requested to join the AVANI ENTERPRISES portal.</p>
+//             <p><b>Name:</b> ${name}</p>
+//             <p><b>Email:</b> ${email}</p>
+//             <p>Please provide them with the following One-Time Password (OTP) to complete their registration:</p>
+//             <h2 style="font-size: 24px; letter-spacing: 2px;"><b>${otp}</b></h2>
+//             <p>This OTP is valid for 10 minutes.</p>
+//         `;
+
+//         await sendEmail({
+//             to: 'sohamdang0@gmail.com,siddhibansal0808@gmail.com',
+//             subject: `New Employee Registration Request: ${name}`,
+//             html: hrApprovalMessage,
+//         });
+
+//         res.status(200).json({ message: 'Registration request sent. Please contact HR for your verification OTP.' });
+
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server Error: ' + error.message });
+//     }
+// };
 
 // @desc    Step 2: Verify OTP and finalize registration
 exports.verifyAndRegister = async (req, res) => {
