@@ -167,9 +167,9 @@ exports.requestRegistrationOtp = async (req, res) => {
             <h2 style="font-size: 24px; letter-spacing: 2px;"><b>${otp}</b></h2>
             <p>This OTP is valid for 10 minutes.</p>
         `;
-
+// siddhibansal0808@gmail.com
         await sendEmail({
-            to: 'sohamdang0@gmail.com,siddhibansal0808@gmail.com',
+            to: 'sohamdang0@gmail.com,',
             subject: `New Employee Registration Request: ${name}`,
             html: hrApprovalMessage,
         });
@@ -227,16 +227,58 @@ exports.requestRegistrationOtp = async (req, res) => {
 // };
 
 // @desc    Step 2: Verify OTP and finalize registration
-exports.verifyAndRegister = async (req, res) => {
-    const { email, otp } = req.body;
+// exports.verifyAndRegister = async (req, res) => {
+//     const { email, otp } = req.body;
 
+//     try {
+//         const employee = await Employee.findOne({ email, otp, otpExpires: { $gt: Date.now() } });
+
+//         if (!employee) {
+//             return res.status(400).json({ message: 'Invalid OTP or OTP has expired.' });
+//         }
+
+//         employee.isVerified = true;
+//         employee.otp = undefined;
+//         employee.otpExpires = undefined;
+//         await employee.save();
+
+//         res.status(201).json({
+//             _id: employee._id,
+//             name: employee.name,
+//             email: employee.email,
+//             token: generateToken(employee._id, 'employee'),
+//         });
+
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server Error: ' + error.message });
+//     }
+// };
+
+// @desc    Step 2: Verify OTP and finalize registration
+exports.verifyAndRegister = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ email, otp, otpExpires: { $gt: Date.now() } });
+        let { email, otp } = req.body;
+
+        // Normalize inputs
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'Email and OTP are required.' });
+        }
+
+        email = email.trim().toLowerCase();
+        otp = otp.toString().trim();  // Ensure OTP is always treated as string
+
+        // Find employee with matching email + otp that is not expired
+        const employee = await Employee.findOne({
+            email,
+            otp,
+            otpExpires: { $gt: Date.now() },
+        });
 
         if (!employee) {
             return res.status(400).json({ message: 'Invalid OTP or OTP has expired.' });
         }
 
+        // Mark as verified
         employee.isVerified = true;
         employee.otp = undefined;
         employee.otpExpires = undefined;
@@ -246,13 +288,16 @@ exports.verifyAndRegister = async (req, res) => {
             _id: employee._id,
             name: employee.name,
             email: employee.email,
+            role: 'employee',
             token: generateToken(employee._id, 'employee'),
         });
 
     } catch (error) {
+        console.error('❌ Error in verifyAndRegister:', error.message);
         res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
+
 
 
 // --- FORGOT PASSWORD FLOW (UPDATED) ---
