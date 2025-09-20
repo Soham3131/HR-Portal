@@ -6,32 +6,7 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail'); 
 const LoginRecord = require('../models/LoginRecord'); 
 
-// @desc    Register a new HR user
-// @route   POST /api/auth/register/hr
-// @access  Public (This should be protected or removed in a real production environment)
-// exports.registerHR = async (req, res) => {
-//     const { name, email, password } = req.body;
-//     try {
-//         const hrExists = await HR.findOne({ email });
-//         if (hrExists) {
-//             return res.status(400).json({ message: 'HR user with this email already exists' });
-//         }
-//         const hr = await HR.create({ name, email, password });
-//         if (hr) {
-//             res.status(201).json({
-//                 _id: hr._id,
-//                 name: hr.name,
-//                 email: hr.email,
-//                 role: 'hr',
-//                 token: generateToken(hr._id, 'hr'),
-//             });
-//         } else {
-//             res.status(400).json({ message: 'Invalid HR data provided' });
-//         }
-//     } catch (error) {
-//         res.status(500).json({ message: 'Server Error: ' + error.message });
-//     }
-// };
+
 
 exports.registerHR = async (req, res) => {
     console.log('✅ registerHR controller hit'); // Add this line

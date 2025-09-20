@@ -20,6 +20,8 @@ const {
     getPendingLeaves,
       // <-- Import new function
     updateLeaveStatus  ,
+    getPenalties,
+    getEmployeePenalties,
     calculatePayroll,getEmployeeRankings
 } = require('../controllers/hrController');
 
@@ -53,4 +55,8 @@ router.get('/leaves/pending', protectHR, getPendingLeaves);
 router.put('/leaves/:id/status', protectHR, updateLeaveStatus);
 router.get('/payroll', protectHR, calculatePayroll);
 router.get('/rankings', protectHR, getEmployeeRankings);
+
+
+router.get('/penalties', protectHR, getPenalties);
+router.get('/penalties/:employeeId', protectHR, getEmployeePenalties);
 module.exports = router;

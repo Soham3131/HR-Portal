@@ -5,6 +5,12 @@ const generateToken = require('../utils/generateToken');
 const Announcement = require('../models/Announcement');
 const LoginRecord = require('../models/LoginRecord');
 const LeaveRequest = require('../models/LeaveRequest');
+const Penalty = require('../models/Penalty');
+const geoip = require('geoip-lite');
+const axios = require("axios");
+
+
+
 
 
 // @desc    Get logged-in employee's profile
@@ -44,68 +50,307 @@ exports.updateEmployeeProfile = async (req, res) => {
         res.status(404).json({ message: 'Employee not found' });
     }
 };
-// @desc    Mark attendance (check-in/check-out)
+
+function parseDeviceModel(userAgent) {
+  if (!userAgent) return "Unknown";
+
+  // Android devices → extracts model like "Redmi Note 10"
+  const androidMatch = userAgent.match(/\((?:Linux; )?Android.*?; ([^)]+)\)/i);
+  if (androidMatch && androidMatch[1]) {
+    return androidMatch[1].trim();
+  }
+
+  // iPhone / iPad
+  if (/iPhone/i.test(userAgent)) return "iPhone";
+  if (/iPad/i.test(userAgent)) return "iPad";
+
+  // Windows / Mac
+  if (/Windows/i.test(userAgent)) return "Windows PC";
+  if (/Macintosh/i.test(userAgent)) return "Mac";
+
+  return "Unknown";
+}
+
+// exports.markAttendance = async (req, res) => {
+//   const { type, status, eod, notes, deviceInfo, isTouchDevice, latitude, longitude } = req.body;
+//   const employeeId = req.user.id;
+//   const now = new Date();
+//   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+//   try {
+//     let attendance = await Attendance.findOne({ employeeId, date: today });
+
+//     // --- Device + IP ---
+//     const ipAddress =
+//       req.body.ipAddress ||
+//       req.headers["x-forwarded-for"]?.split(",")[0] ||
+//       req.ip ||
+//       "Unknown";
+
+//     const userAgent = deviceInfo || req.headers["user-agent"] || "Unknown device";
+//     const deviceModel = parseDeviceModel(userAgent);
+
+//     // --- Location ---
+//     let location = "Unknown";
+//     if (latitude && longitude) {
+//       location = `Lat: ${latitude}, Lng: ${longitude}`;
+//     }
+
+//     if (type === "checkin") {
+//       if (attendance) {
+//         return res.status(400).json({ message: "Already checked in today" });
+//       }
+
+//       await new LoginRecord({
+//         employeeId,
+//         action: "Check-in",
+//         deviceModel,
+//         deviceInfo: userAgent,
+//         ipAddress,
+//         location,
+//         latitude,
+//         longitude,
+//         isTouchDevice: isTouchDevice || false,
+//       }).save();
+
+//       if (status === "Holiday" || status === "Half Day") {
+//         const employee = await Employee.findById(employeeId);
+//         if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+//         if (status === "Holiday") employee.holidaysLeft -= 1;
+//         else if (status === "Half Day") employee.holidaysLeft -= 0.5;
+//         await employee.save();
+//       }
+
+//       attendance = new Attendance({
+//         employeeId,
+//         date: today,
+//         status,
+//         notes,
+//         checkIn: new Date(),
+//       });
+//       await attendance.save();
+
+//       const populatedAttendance = await Attendance.findById(attendance._id).populate("employeeId");
+//       return res.status(201).json(populatedAttendance);
+//     }
+
+//     if (type === "checkout") {
+//       if (!attendance) {
+//         const checkInRecord = await Attendance.findOne({
+//           employeeId,
+//           checkOut: null,
+//         }).sort({ checkIn: -1 });
+
+//         if (!checkInRecord) {
+//           return res.status(400).json({ message: "You have not checked in" });
+//         }
+
+//         attendance = checkInRecord;
+//       }
+
+//       if (!eod) {
+//         return res.status(400).json({ message: "EOD report is required to check out" });
+//       }
+
+//       attendance.checkOut = new Date();
+//       attendance.eod = eod;
+//       await attendance.save();
+
+//       await new LoginRecord({
+//         employeeId,
+//         action: "Check-out",
+//         deviceModel,
+//         deviceInfo: userAgent,
+//         ipAddress,
+//         location,
+//         latitude,
+//         longitude,
+//         isTouchDevice: isTouchDevice || false,
+//       }).save();
+
+//       const populatedAttendance = await Attendance.findById(attendance._id).populate("employeeId");
+//       return res.json(populatedAttendance);
+//     }
+
+//     return res.status(400).json({ message: "Invalid attendance type" });
+//   } catch (error) {
+//     console.error("MarkAttendance error:", error);
+//     return res.status(500).json({ message: "Server Error: " + error.message });
+//   }
+// };
+
+// ✅ Attendance Controller
 exports.markAttendance = async (req, res) => {
-    const { type, status, eod, notes, deviceInfo } = req.body;
-    const employeeId = req.user.id;
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const { type, status, eod, notes, deviceInfo, isTouchDevice, latitude, longitude } = req.body;
+  const employeeId = req.user.id;
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-    try {
-        let attendance = await Attendance.findOne({ employeeId, date: today });
+  try {
+    let attendance = await Attendance.findOne({ employeeId, date: today });
 
-        if (type === 'checkin') {
-            if (attendance) {
-                return res.status(400).json({ message: 'Already checked in today' });
-            }
+    // --- Device + IP ---
+    const ipAddress =
+      req.body.ipAddress ||
+      req.headers["x-forwarded-for"]?.split(",")[0] ||
+      req.ip ||
+      "Unknown";
 
-            // --- Create a login record for the check-in action ---
-            const ipAddress = req.ip || req.connection.remoteAddress;
-            const newCheckInRecord = new LoginRecord({
-                employeeId: employeeId,
-                action: 'Check-in',
-                deviceInfo: deviceInfo || 'Unknown device',
-                ipAddress: ipAddress,
-                isTouchDevice: req.body.isTouchDevice || false,
-            });
-            await newCheckInRecord.save();
+    const userAgent = deviceInfo || req.headers["user-agent"] || "Unknown device";
+    const deviceModel = parseDeviceModel(userAgent); // 👈 pulls "Redmi Note 10", "Realme GT", etc.
 
-            // Leave Deduction Logic
-            if (status === 'Holiday' || status === 'Half Day') {
-                const employee = await Employee.findById(employeeId);
-                if (!employee) return res.status(404).json({ message: 'Employee not found' });
-                if (status === 'Holiday') employee.holidaysLeft -= 1;
-                else if (status === 'Half Day') employee.holidaysLeft -= 0.5;
-                await employee.save();
-            }
+    // --- Location ---
+    let location = "Unknown";
+    if (latitude && longitude) {
+      location = `Lat: ${latitude}, Lng: ${longitude}`;
+    }
 
-            attendance = new Attendance({
-                employeeId, date: today, status, notes,
-                checkIn: new Date(),
-            });
-            await attendance.save();
-            
-            const populatedAttendance = await Attendance.findById(attendance._id).populate('employeeId');
-            res.status(201).json(populatedAttendance);
+    // --- CHECK-IN ---
+    if (type === "checkin") {
+      if (attendance) {
+        return res.status(400).json({ message: "Already checked in today" });
+      }
 
-        } else if (type === 'checkout') {
-            if (!attendance) {
-                const checkInRecord = await Attendance.findOne({ employeeId, checkOut: null }).sort({ checkIn: -1 });
-                if (!checkInRecord) return res.status(400).json({ message: 'You have not checked in' });
-                attendance = checkInRecord;
-            }
-            if (!eod) return res.status(400).json({ message: 'EOD report is required to check out' });
-            attendance.checkOut = new Date();
-            attendance.eod = eod;
-            await attendance.save();
-            res.json(attendance);
-        } else {
-            res.status(400).json({ message: 'Invalid attendance type' });
+      // ✅ Atomic upsert to prevent duplicate check-in race conditions
+      attendance = await Attendance.findOneAndUpdate(
+        { employeeId, date: today },
+        {
+          $setOnInsert: {
+            employeeId,
+            date: today,
+            status,
+            notes,
+            checkIn: new Date(),
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      // Add login record
+      await new LoginRecord({
+        employeeId,
+        action: "Check-in",
+        deviceModel,
+        deviceInfo: userAgent,
+        ipAddress,
+        location,
+        latitude,
+        longitude,
+        isTouchDevice: isTouchDevice || false,
+      }).save();
+
+      // ✅ Handle holiday / half-day deductions
+      if (status === "Holiday" || status === "Half Day") {
+        const employee = await Employee.findById(employeeId);
+        if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+        if (status === "Holiday") employee.holidaysLeft -= 1;
+        else if (status === "Half Day") employee.holidaysLeft -= 0.5;
+
+        await employee.save();
+      }
+
+      const populatedAttendance = await Attendance.findById(attendance._id).populate("employeeId");
+      return res.status(201).json(populatedAttendance);
+    }
+
+    // --- CHECK-OUT ---
+    if (type === "checkout") {
+      if (!attendance) {
+        const checkInRecord = await Attendance.findOne({
+          employeeId,
+          checkOut: null,
+        }).sort({ checkIn: -1 });
+
+        if (!checkInRecord) {
+          return res.status(400).json({ message: "You have not checked in" });
         }
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
+
+        attendance = checkInRecord;
+      }
+
+      if (!eod) {
+        return res.status(400).json({ message: "EOD report is required to check out" });
+      }
+
+      attendance.checkOut = new Date();
+      attendance.eod = eod;
+      await attendance.save();
+
+      await new LoginRecord({
+        employeeId,
+        action: "Check-out",
+        deviceModel,
+        deviceInfo: userAgent,
+        ipAddress,
+        location,
+        latitude,
+        longitude,
+        isTouchDevice: isTouchDevice || false,
+      }).save();
+
+      const populatedAttendance = await Attendance.findById(attendance._id).populate("employeeId");
+      return res.json(populatedAttendance);
+    }
+
+    return res.status(400).json({ message: "Invalid attendance type" });
+  } catch (error) {
+    console.error("MarkAttendance error:", error);
+    return res.status(500).json({ message: "Server Error: " + error.message });
+  }
+};
+
+exports.getPenalties = async (req, res) => {
+    try {
+        const { month } = req.query;
+        const start = new Date(`${month}-01T00:00:00Z`);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
+
+        const penalties = await LoginRecord.aggregate([
+            {
+                $match: {
+                    action: { $in: ['Check-in', 'Check-out'] },
+                    isTouchDevice: true,
+                    createdAt: { $gte: start, $lt: end }
+                }
+            },
+            {
+                $group: {
+                    _id: { employeeId: "$employeeId" },
+                    penaltyCount: { $sum: 1 },
+                    dates: { $push: { action: "$action", createdAt: "$createdAt", ip: "$ipAddress" } }
+                }
+            },
+            {
+                $lookup: {
+                    from: "employees",
+                    localField: "_id.employeeId",
+                    foreignField: "_id",
+                    as: "employee"
+                }
+            },
+            { $unwind: "$employee" },
+            {
+  $project: {
+    employeeId: "$employee.employeeId",
+    name: "$employee.name",
+    department: "$employee.department",
+    penaltyCount: 1,
+    dates: { $ifNull: ["$dates", []] } // ✅ Always return [] if null/undefined
+  }
+}
+
+        ]);
+
+        res.json(penalties);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching penalties: " + err.message });
     }
 };
+
+
 
 
 
@@ -247,3 +492,19 @@ exports.getEmployeeRankings = async (req, res) => {
         res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
+
+exports.getEmployeePenalties = async (req, res) => {
+  const { employeeId } = req.params;
+  const { month } = req.query; // YYYY-MM
+  try {
+    const penalties = await Penalty.find({
+      employee: employeeId,
+      month,
+    }).populate("employee", "name employeeId");
+    res.json(penalties);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

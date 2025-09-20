@@ -61,6 +61,7 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.set("trust proxy", true);
 
 // A simple root route to test if the server is running
 app.get('/', (req, res) => {

@@ -230,6 +230,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import MotivationalQuotes from '../components/MotivationalQuotes';
 
+
 const EmployeeDashboard = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState(null);
@@ -244,6 +245,23 @@ const EmployeeDashboard = () => {
     const [notes, setNotes] = useState('');
     const [requestedLeaveType, setRequestedLeaveType] = useState(null);
     const { theme } = useTheme();
+
+    const [ip, setIp] = useState("");
+
+    const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+useEffect(() => {
+  const getIp = async () => {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      setIp(data.ip);
+    } catch (err) {
+      console.error("Failed to fetch IP:", err);
+    }
+  };
+  getIp();
+}, []);
 
     useEffect(() => {
         const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
@@ -289,54 +307,150 @@ const EmployeeDashboard = () => {
         }
     };
 
-    const handleCheckIn = async (status) => {
-        try {
-            const deviceInfo = navigator.userAgent;
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // ✅ Updated Check-in with GPS
+// const handleCheckIn = async (status) => {
+//     if (!("geolocation" in navigator)) {
+//         alert("Geolocation is not supported in this browser!");
+//         return;
+//     }
 
-            const { data: newRecord } = await api.post('/employee/attendance', {
-                type: 'checkin',
-                status,
-                notes,
-                deviceInfo,
-                isTouchDevice
-            });
+//     navigator.geolocation.getCurrentPosition(
+//         async (pos) => {
+//             try {
+//                 const { latitude, longitude } = pos.coords;
+//                 const deviceInfo = navigator.userAgent;
+//                 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-            setCheckInModalOpen(false);
-            setNotes('');
-            setTodayAttendance(newRecord);
-            const { data: updatedProfile } = await api.get('/employee/profile');
-            setProfile(updatedProfile);
-            setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
-        } catch (error) {
-            console.error("Check-in failed:", error);
-            alert(error.response?.data?.message || 'Check-in failed');
-        }
-    };
+//                 const { data: newRecord } = await api.post('/employee/attendance', {
+//                     type: 'checkin',
+//                     status,
+//                     notes,
+//                     deviceInfo,
+//                     ipAddress: ip,
+//                     latitude,
+//                     longitude,
+//                     isTouchDevice
+//                 });
+
+//                 setCheckInModalOpen(false);
+//                 setNotes('');
+//                 setTodayAttendance(newRecord);
+//                 const { data: updatedProfile } = await api.get('/employee/profile');
+//                 setProfile(updatedProfile);
+//                 setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
+//             } catch (error) {
+//                 console.error("Check-in failed:", error);
+//                 alert(error.response?.data?.message || 'Check-in failed');
+//             }
+//         },
+//         (err) => {
+//             alert("⚠️ Location access is required for attendance!");
+//             console.error("GPS Error:", err);
+//         },
+//         { enableHighAccuracy: true }
+//     );
+// };
+// ✅ Updated Check-in with GPS (with duplicate prevention)
+const handleCheckIn = async (status) => {
+    if (!("geolocation" in navigator)) {
+        alert("Geolocation is not supported in this browser!");
+        return;
+    }
+
+    if (isCheckingIn) return; // prevent double submission
+    setIsCheckingIn(true);
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            try {
+                const { latitude, longitude } = pos.coords;
+                const deviceInfo = navigator.userAgent;
+                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+                const { data: newRecord } = await api.post('/employee/attendance', {
+                    type: 'checkin',
+                    status,
+                    notes,
+                    deviceInfo,
+                    ipAddress: ip,
+                    latitude,
+                    longitude,
+                    isTouchDevice
+                });
+
+                setCheckInModalOpen(false);
+                setNotes('');
+                setTodayAttendance(newRecord);
+
+                const { data: updatedProfile } = await api.get('/employee/profile');
+                setProfile(updatedProfile);
+                setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
+            } catch (error) {
+                console.error("Check-in failed:", error);
+                alert(error.response?.data?.message || 'Check-in failed');
+            } finally {
+                setIsCheckingIn(false); // reset loading flag
+            }
+        },
+        (err) => {
+            alert("⚠️ Location access is required for attendance!");
+            console.error("GPS Error:", err);
+            setIsCheckingIn(false); // reset even if error
+        },
+        { enableHighAccuracy: true }
+    );
+};
+
 
     const proceedWithUnpaidLeave = () => {
         handleCheckIn(requestedLeaveType);
         setUnpaidLeaveModalOpen(false);
     };
 
-    const handleCheckOut = async () => {
-        if (!eod.trim()) {
-            alert("EOD report is required to check out.");
-            return;
-        }
-        try {
-            const { data: updatedRecord } = await api.post('/employee/attendance', { type: 'checkout', eod });
-            setCheckOutModalOpen(false);
-            setEod('');
-            setTodayAttendance(updatedRecord);
-            setAttendance(prevAttendance =>
-                prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
-            );
-        } catch (error) {
-            console.error("Check-out failed:", error);
-            alert(error.response?.data?.message || 'Check-out failed');
-        }
-    };
+    // ✅ Updated Check-out with GPS
+const handleCheckOut = () => {
+    if (!eod.trim()) {
+        alert("EOD report is required to check out.");
+        return;
+    }
+
+    if (!("geolocation" in navigator)) {
+        alert("Geolocation is not supported in this browser!");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            try {
+                const { latitude, longitude } = pos.coords;
+
+                const { data: updatedRecord } = await api.post('/employee/attendance', {
+                    type: 'checkout',
+                    eod,
+                    ipAddress: ip,
+                    latitude,
+                    longitude,
+                });
+
+                setCheckOutModalOpen(false);
+                setEod('');
+                setTodayAttendance(updatedRecord);
+                setAttendance(prevAttendance =>
+                    prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
+                );
+            } catch (error) {
+                console.error("Check-out failed:", error);
+                alert(error.response?.data?.message || 'Check-out failed');
+            }
+        },
+        (err) => {
+            alert("⚠️ Location access is required for checkout!");
+            console.error("GPS Error:", err);
+        },
+        { enableHighAccuracy: true }
+    );
+};
+
 
     const isAfterMidday = new Date().getHours() >= 12;
 

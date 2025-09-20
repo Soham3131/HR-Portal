@@ -5,6 +5,9 @@ const SystemConfig = require('../models/SystemConfig');
 const Announcement = require('../models/Announcement');
 const LoginRecord = require('../models/LoginRecord'); 
 const LeaveRequest = require('../models/LeaveRequest'); 
+const Penalty = require('../models/Penalty');
+
+
 
 exports.getAllEmployees = async (req, res) => {
     try {
@@ -363,11 +366,7 @@ exports.getAnalyticsData = async (req, res) => {
     }
 };
 
-exports.getAnalyticsData = async (req, res) => {
-    // This function can be kept for general stats or expanded later.
-    // For now, the main logic will be in the new function.
-    res.json({ message: "General analytics endpoint." });
-};
+
 
 exports.getEmployeeAnalytics = async (req, res) => {
     const { employeeId } = req.params;
@@ -588,99 +587,6 @@ exports.updateLeaveStatus = async (req, res) => {
 };
 
 
-// neww
-
-
-
-// exports.calculatePayroll = async (req, res) => {
-//     const { month, year } = req.query; // e.g., month=8, year=2025
-
-//     const startDate = new Date(Date.UTC(year, month - 1, 1));
-//     const endDate = new Date(Date.UTC(year, month, 0));
-
-//     try {
-//         const employees = await Employee.find({});
-//         const monthlyAttendance = await Attendance.find({
-//             date: { $gte: startDate, $lte: endDate }
-//         });
-
-//         const payrollData = employees.map(emp => {
-//             const dailySalary = emp.salary > 0 ? emp.salary / 30 : 0;
-//             const empAttendance = monthlyAttendance.filter(a => a.employeeId.toString() === emp._id.toString());
-
-//             let lateDeductions = 0;
-//             let noEodDeductions = 0;
-//             const deductionLog = []; // New log for each employee
-//             const IST_OFFSET_MS = 330 * 60 * 1000; // 5.5 hours for IST
-
-//             empAttendance.forEach(att => {
-//                 const eventDate = new Date(att.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-
-//                 // Rule 1: Late Sign-in Deductions
-//                 if (att.checkIn) {
-//                     const checkInUTC = new Date(att.checkIn);
-//                     const checkInIST = new Date(checkInUTC.getTime() + IST_OFFSET_MS);
-//                     const checkInMinutes = checkInIST.getUTCHours() * 60 + checkInIST.getUTCMinutes();
-                    
-//                     let lateFine = 0;
-//                     if (checkInMinutes >= 556 && checkInMinutes <= 615) lateFine = 100;      // 9:16 - 10:15
-//                     else if (checkInMinutes > 615 && checkInMinutes <= 675) lateFine = 200; // 10:16 - 11:15
-//                     else if (checkInMinutes > 675 && checkInMinutes <= 720) lateFine = 300; // 11:16 - 12:00
-//                     else if (checkInMinutes > 720) lateFine = (dailySalary / 2);              // After 12:00 PM
-                    
-//                     if (lateFine > 0) {
-//                         lateDeductions += lateFine;
-//                         deductionLog.push({ date: eventDate, reason: 'Late Sign-in', amount: Math.round(lateFine) });
-//                     }
-//                 }
-
-//                 // Rule 2: No EOD / No Checkout Deductions
-//                 if ((att.status === 'Present' || att.status === 'Half Day')) {
-//                     if (att.checkOut && !att.eod) {
-//                         const checkOutUTC = new Date(att.checkOut);
-//                         const checkOutIST = new Date(checkOutUTC.getTime() + IST_OFFSET_MS);
-//                         const checkOutHour = checkOutIST.getUTCHours();
-//                         if (checkOutHour >= 21) {
-//                             const fine = dailySalary * 0.70;
-//                             noEodDeductions += fine;
-//                             deductionLog.push({ date: eventDate, reason: 'No EOD (after 9 PM)', amount: Math.round(fine) });
-//                         }
-//                     } else if (!att.checkOut) {
-//                         noEodDeductions += dailySalary;
-//                         deductionLog.push({ date: eventDate, reason: 'No Checkout', amount: Math.round(dailySalary) });
-//                     }
-//                 }
-//             });
-
-//             const unpaidLeaves = emp.holidaysLeft < 0 ? Math.abs(emp.holidaysLeft) : 0;
-//             const unpaidLeaveDeductions = unpaidLeaves * dailySalary;
-//             if (unpaidLeaves > 0) {
-//                 deductionLog.push({ date: 'Month Total', reason: `${unpaidLeaves} Unpaid Leave(s)`, amount: Math.round(unpaidLeaveDeductions) });
-//             }
-
-//             const totalDeductions = unpaidLeaveDeductions + lateDeductions + noEodDeductions;
-//             const netSalary = emp.salary - totalDeductions;
-
-//             return {
-//                 employeeId: emp._id,
-//                 employeeName: emp.name,
-//                 baseSalary: emp.salary,
-//                 unpaidLeaves,
-//                 lateDeductions: Math.round(lateDeductions),
-//                 noEodDeductions: Math.round(noEodDeductions),
-//                 totalDeductions: Math.round(totalDeductions),
-//                 netSalary: Math.round(netSalary),
-//                 deductionLog, // Include the detailed log in the response
-//             };
-//         });
-
-//         res.json(payrollData);
-
-//     } catch (error) {
-//         console.error("Error calculating payroll:", error);
-//         res.status(500).json({ message: 'Server Error: ' + error.message });
-//     }
-// };
 
 exports.calculatePayroll = async (req, res) => {
     const { month, year } = req.query; // e.g., month=8, year=2025
@@ -835,4 +741,198 @@ exports.getEmployeeRankings = async (req, res) => {
         console.error("Error in getEmployeeRankings:", error);
         res.status(500).json({ message: 'Server Error: ' + error.message });
     }
+};
+
+
+// controllers/hrController.js
+// exports.getPenalties = async (req, res) => {
+//     try {
+//         const { month } = req.query;
+//         const start = new Date(`${month}-01T00:00:00Z`);
+//         const end = new Date(start);
+//         end.setMonth(end.getMonth() + 1);
+
+//         const penalties = await LoginRecord.aggregate([
+//             {
+//                 $match: {
+//                     action: { $in: ['Check-in', 'Check-out'] },
+//                     isTouchDevice: true,
+//                     createdAt: { $gte: start, $lt: end }
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: { employeeId: "$employeeId" },
+//                     penaltyCount: { $sum: 1 },
+//                     dates: { $push: { action: "$action", createdAt: "$createdAt", ip: "$ipAddress" } }
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: "employees",
+//                     localField: "_id.employeeId",
+//                     foreignField: "_id",
+//                     as: "employee"
+//                 }
+//             },
+//             { $unwind: "$employee" },
+//             {
+//   $project: {
+//     employeeId: "$employee.employeeId",
+//     name: "$employee.name",
+//     department: "$employee.department",
+//     penaltyCount: 1,
+//     dates: { $ifNull: ["$dates", []] } // ✅ Always return [] if null/undefined
+//   }
+// }
+
+//         ]);
+
+//         res.json(penalties);
+//     } catch (err) {
+//         res.status(500).json({ message: "Error fetching penalties: " + err.message });
+//     }
+// };
+
+
+
+// exports.getEmployeePenalties = async (req, res) => {
+//   const { employeeId } = req.params;
+//   const { month } = req.query; // YYYY-MM
+//   try {
+//     const penalties = await Penalty.find({
+//       employee: employeeId,
+//       month,
+//     }).populate("employee", "name employeeId");
+//     res.json(penalties);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+// controllers/penaltyController.js
+
+
+
+
+
+
+// Employees that should always show 0 penalties
+const EXEMPT_EMPLOYEES = ["AVANI-1003", "AVANI-1007", "AVANI-1022"];
+
+exports.getPenalties = async (req, res) => {
+  try {
+    const { month } = req.query; // format: YYYY-MM
+    const start = new Date(`${month}-01T00:00:00Z`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    let penalties = await Employee.aggregate([
+      {
+        $lookup: {
+          from: "loginrecords",
+          let: { empId: "$_id" }, // ✅ use ObjectId (_id)
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$employeeId", "$$empId"] }, // ✅ match ObjectId
+                action: { $in: ["Check-in", "Check-out"] },
+                isTouchDevice: true,
+                createdAt: { $gte: start, $lt: end },
+              },
+            },
+            {
+              $project: {
+                action: 1,
+                createdAt: 1,
+                ipAddress: 1,
+                location: 1,
+                latitude: 1,
+                longitude: 1,
+                deviceModel: 1,
+              },
+            },
+          ],
+          as: "penaltyLogs",
+        },
+      },
+      {
+        $addFields: {
+          penaltyCount: {
+            $cond: [
+              { $in: ["$employeeId", EXEMPT_EMPLOYEES] }, // ✅ use string employeeId
+              0,
+              { $size: "$penaltyLogs" },
+            ],
+          },
+          // clear logs if exempted
+          penaltyLogs: {
+            $cond: [
+              { $in: ["$employeeId", EXEMPT_EMPLOYEES] },
+              [],
+              "$penaltyLogs",
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          employeeId: 1, // string code (AVANI-1003)
+          name: 1,
+          department: 1,
+          penaltyCount: 1,
+          dates: "$penaltyLogs",
+        },
+      },
+    ]);
+
+    // sort → penalties > 0 first, then 0, then by name
+    penalties.sort((a, b) => {
+      if (a.penaltyCount === 0 && b.penaltyCount > 0) return 1;
+      if (a.penaltyCount > 0 && b.penaltyCount === 0) return -1;
+      return a.name.localeCompare(b.name);
+    });
+
+    res.json(penalties);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching penalties: " + err.message });
+  }
+};
+
+// For single employee penalty detail
+exports.getEmployeePenalties = async (req, res) => {
+  const { employeeId } = req.params; // string code
+  const { month } = req.query; // YYYY-MM
+  try {
+    // If employee is exempt → return empty penalties
+    if (EXEMPT_EMPLOYEES.includes(employeeId)) {
+      return res.json([]);
+    }
+
+    const start = new Date(`${month}-01T00:00:00Z`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const penalties = await LoginRecord.find({
+      employeeId: employee._id,
+      action: { $in: ["Check-in", "Check-out"] },
+      isTouchDevice: true,
+      createdAt: { $gte: start, $lt: end },
+    }).lean();
+
+    res.json(penalties);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
 };

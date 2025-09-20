@@ -25,6 +25,7 @@ import ApplyForLeavePage from '../pages/ApplyForLeavePage';
 import ApproveLeavePage from '../pages/ApproveLeavePage';
 import MainLayout from "../components/MainLayout";
 import RankingsPage from '../pages/RankingsPage';
+import PenaltiesPage from '../pages/PenaltiesPage';
 
 const AppRouter = () => {
   return (
@@ -59,6 +60,8 @@ const AppRouter = () => {
       />
 
       {/* HR Protected Routes */}
+
+      
       <Route 
         path="/hr/dashboard" 
         element={<ProtectedRoute roles={['hr']}><MainLayout><HRDashboard /></MainLayout></ProtectedRoute>} 
@@ -100,7 +103,16 @@ const AppRouter = () => {
         path="/hr/approve-leave" 
         element={<ProtectedRoute roles={['hr']}><ApproveLeavePage /></ProtectedRoute>} 
       />
-
+ <Route 
+        path="/hr/penalties" 
+        element={
+          <ProtectedRoute roles={['hr']}>
+            <MainLayout>
+              <PenaltiesPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
       {/* Catch-all Not Found Route */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
