@@ -44,7 +44,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config(); // This ensures process.env is populated before any other file is loaded
 
-const cors = require('cors');
+const cors  = require('cors');
 const connectDB = require('./config/db');
 
 // Now, we can import our routes, which depend on the environment variables
