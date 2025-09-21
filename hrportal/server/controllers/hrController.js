@@ -822,117 +822,236 @@ exports.getEmployeeRankings = async (req, res) => {
 // Employees that should always show 0 penalties
 const EXEMPT_EMPLOYEES = ["AVANI-1003", "AVANI-1007", "AVANI-1022"];
 
+// exports.getPenalties = async (req, res) => {
+//   try {
+//     const { month } = req.query; // format: YYYY-MM
+//     const start = new Date(`${month}-01T00:00:00Z`);
+//     const end = new Date(start);
+//     end.setMonth(end.getMonth() + 1);
+
+//     let penalties = await Employee.aggregate([
+//       {
+//         $lookup: {
+//           from: "loginrecords",
+//           let: { empId: "$_id" }, // ✅ use ObjectId (_id)
+//           pipeline: [
+//             {
+//               $match: {
+//                 $expr: { $eq: ["$employeeId", "$$empId"] }, // ✅ match ObjectId
+//                 action: { $in: ["Check-in", "Check-out"] },
+//                 isTouchDevice: true,
+//                 createdAt: { $gte: start, $lt: end },
+//               },
+//             },
+//             {
+//               $project: {
+//                 action: 1,
+//                 createdAt: 1,
+//                 ipAddress: 1,
+//                 location: 1,
+//                 latitude: 1,
+//                 longitude: 1,
+//                 deviceModel: 1,
+//               },
+//             },
+//           ],
+//           as: "penaltyLogs",
+//         },
+//       },
+//       {
+//         $addFields: {
+//           penaltyCount: {
+//             $cond: [
+//               { $in: ["$employeeId", EXEMPT_EMPLOYEES] }, // ✅ use string employeeId
+//               0,
+//               { $size: "$penaltyLogs" },
+//             ],
+//           },
+//           // clear logs if exempted
+//           penaltyLogs: {
+//             $cond: [
+//               { $in: ["$employeeId", EXEMPT_EMPLOYEES] },
+//               [],
+//               "$penaltyLogs",
+//             ],
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           employeeId: 1, // string code (AVANI-1003)
+//           name: 1,
+//           department: 1,
+//           penaltyCount: 1,
+//           dates: "$penaltyLogs",
+//         },
+//       },
+//     ]);
+
+//     // sort → penalties > 0 first, then 0, then by name
+//     penalties.sort((a, b) => {
+//       if (a.penaltyCount === 0 && b.penaltyCount > 0) return 1;
+//       if (a.penaltyCount > 0 && b.penaltyCount === 0) return -1;
+//       return a.name.localeCompare(b.name);
+//     });
+
+//     res.json(penalties);
+//   } catch (err) {
+//     res
+//       .status(500)
+//       .json({ message: "Error fetching penalties: " + err.message });
+//   }
+// };
+
+// // For single employee penalty detail
+// exports.getEmployeePenalties = async (req, res) => {
+//   const { employeeId } = req.params; // string code
+//   const { month } = req.query; // YYYY-MM
+//   try {
+//     // If employee is exempt → return empty penalties
+//     if (EXEMPT_EMPLOYEES.includes(employeeId)) {
+//       return res.json([]);
+//     }
+
+//     const start = new Date(`${month}-01T00:00:00Z`);
+//     const end = new Date(start);
+//     end.setMonth(end.getMonth() + 1);
+
+//     const employee = await Employee.findOne({ employeeId });
+//     if (!employee) {
+//       return res.status(404).json({ message: "Employee not found" });
+//     }
+
+//     const penalties = await LoginRecord.find({
+//       employeeId: employee._id,
+//       action: { $in: ["Check-in", "Check-out"] },
+//       isTouchDevice: true,
+//       createdAt: { $gte: start, $lt: end },
+//     }).lean();
+
+//     res.json(penalties);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.getPenalties = async (req, res) => {
-  try {
-    const { month } = req.query; // format: YYYY-MM
-    const start = new Date(`${month}-01T00:00:00Z`);
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 1);
+    try {
+        const { month } = req.query; // format: YYYY-MM
+        const start = new Date(`${month}-01T00:00:00Z`);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
 
-    let penalties = await Employee.aggregate([
-      {
-        $lookup: {
-          from: "loginrecords",
-          let: { empId: "$_id" }, // ✅ use ObjectId (_id)
-          pipeline: [
+        let penalties = await Employee.aggregate([
             {
-              $match: {
-                $expr: { $eq: ["$employeeId", "$$empId"] }, // ✅ match ObjectId
-                action: { $in: ["Check-in", "Check-out"] },
-                isTouchDevice: true,
-                createdAt: { $gte: start, $lt: end },
-              },
+                $lookup: {
+                    from: "loginrecords",
+                    let: { empId: "$_id" }, // ✅ use ObjectId (_id)
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$employeeId", "$$empId"] }, // ✅ match ObjectId
+                                // --- CHANGE: Explicitly filter for touch device check-ins and check-outs ---
+                                $or: [
+                                    { action: "Check-in", isTouchDevice: true },
+                                    { action: "Check-out", isTouchDevice: true }
+                                ],
+                                createdAt: { $gte: start, $lt: end },
+                            },
+                        },
+                        {
+                            $project: {
+                                action: 1,
+                                createdAt: 1,
+                                ipAddress: 1,
+                                location: 1,
+                                latitude: 1,
+                                longitude: 1,
+                                deviceModel: 1,
+                            },
+                        },
+                    ],
+                    as: "penaltyLogs",
+                },
             },
             {
-              $project: {
-                action: 1,
-                createdAt: 1,
-                ipAddress: 1,
-                location: 1,
-                latitude: 1,
-                longitude: 1,
-                deviceModel: 1,
-              },
+                $addFields: {
+                    penaltyCount: {
+                        $cond: [
+                            { $in: ["$employeeId", EXEMPT_EMPLOYEES] }, // ✅ use string employeeId
+                            0,
+                            { $size: "$penaltyLogs" },
+                        ],
+                    },
+                    // clear logs if exempted
+                    penaltyLogs: {
+                        $cond: [
+                            { $in: ["$employeeId", EXEMPT_EMPLOYEES] },
+                            [],
+                            "$penaltyLogs",
+                        ],
+                    },
+                },
             },
-          ],
-          as: "penaltyLogs",
-        },
-      },
-      {
-        $addFields: {
-          penaltyCount: {
-            $cond: [
-              { $in: ["$employeeId", EXEMPT_EMPLOYEES] }, // ✅ use string employeeId
-              0,
-              { $size: "$penaltyLogs" },
-            ],
-          },
-          // clear logs if exempted
-          penaltyLogs: {
-            $cond: [
-              { $in: ["$employeeId", EXEMPT_EMPLOYEES] },
-              [],
-              "$penaltyLogs",
-            ],
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          employeeId: 1, // string code (AVANI-1003)
-          name: 1,
-          department: 1,
-          penaltyCount: 1,
-          dates: "$penaltyLogs",
-        },
-      },
-    ]);
+            {
+                $project: {
+                    _id: 0,
+                    employeeId: 1, // string code (AVANI-1003)
+                    name: 1,
+                    department: 1,
+                    penaltyCount: 1,
+                    dates: "$penaltyLogs",
+                },
+            },
+        ]);
 
-    // sort → penalties > 0 first, then 0, then by name
-    penalties.sort((a, b) => {
-      if (a.penaltyCount === 0 && b.penaltyCount > 0) return 1;
-      if (a.penaltyCount > 0 && b.penaltyCount === 0) return -1;
-      return a.name.localeCompare(b.name);
-    });
+        // sort → penalties > 0 first, then 0, then by name
+        penalties.sort((a, b) => {
+            if (a.penaltyCount === 0 && b.penaltyCount > 0) return 1;
+            if (a.penaltyCount > 0 && b.penaltyCount === 0) return -1;
+            return a.name.localeCompare(b.name);
+        });
 
-    res.json(penalties);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching penalties: " + err.message });
-  }
+        res.json(penalties);
+    } catch (err) {
+        res
+            .status(500)
+            .json({ message: "Error fetching penalties: " + err.message });
+    }
 };
 
 // For single employee penalty detail
 exports.getEmployeePenalties = async (req, res) => {
-  const { employeeId } = req.params; // string code
-  const { month } = req.query; // YYYY-MM
-  try {
-    // If employee is exempt → return empty penalties
-    if (EXEMPT_EMPLOYEES.includes(employeeId)) {
-      return res.json([]);
+    const { employeeId } = req.params; // string code
+    const { month } = req.query; // YYYY-MM
+    try {
+        // If employee is exempt → return empty penalties
+        if (EXEMPT_EMPLOYEES.includes(employeeId)) {
+            return res.json([]);
+        }
+
+        const start = new Date(`${month}-01T00:00:00Z`);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
+
+        const employee = await Employee.findOne({ employeeId });
+        if (!employee) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        // --- CHANGE: Explicitly filter for touch device check-ins and check-outs ---
+        const penalties = await LoginRecord.find({
+            employeeId: employee._id,
+            action: { $in: ["Check-in", "Check-out"] },
+            isTouchDevice: true,
+            createdAt: { $gte: start, $lt: end },
+        }).lean();
+
+        res.json(penalties);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
     }
-
-    const start = new Date(`${month}-01T00:00:00Z`);
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 1);
-
-    const employee = await Employee.findOne({ employeeId });
-    if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
-
-    const penalties = await LoginRecord.find({
-      employeeId: employee._id,
-      action: { $in: ["Check-in", "Check-out"] },
-      isTouchDevice: true,
-      createdAt: { $gte: start, $lt: end },
-    }).lean();
-
-    res.json(penalties);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
 };

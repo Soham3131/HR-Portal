@@ -307,50 +307,7 @@ useEffect(() => {
         }
     };
 
-  // ✅ Updated Check-in with GPS
-// const handleCheckIn = async (status) => {
-//     if (!("geolocation" in navigator)) {
-//         alert("Geolocation is not supported in this browser!");
-//         return;
-//     }
-
-//     navigator.geolocation.getCurrentPosition(
-//         async (pos) => {
-//             try {
-//                 const { latitude, longitude } = pos.coords;
-//                 const deviceInfo = navigator.userAgent;
-//                 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-//                 const { data: newRecord } = await api.post('/employee/attendance', {
-//                     type: 'checkin',
-//                     status,
-//                     notes,
-//                     deviceInfo,
-//                     ipAddress: ip,
-//                     latitude,
-//                     longitude,
-//                     isTouchDevice
-//                 });
-
-//                 setCheckInModalOpen(false);
-//                 setNotes('');
-//                 setTodayAttendance(newRecord);
-//                 const { data: updatedProfile } = await api.get('/employee/profile');
-//                 setProfile(updatedProfile);
-//                 setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
-//             } catch (error) {
-//                 console.error("Check-in failed:", error);
-//                 alert(error.response?.data?.message || 'Check-in failed');
-//             }
-//         },
-//         (err) => {
-//             alert("⚠️ Location access is required for attendance!");
-//             console.error("GPS Error:", err);
-//         },
-//         { enableHighAccuracy: true }
-//     );
-// };
-// ✅ Updated Check-in with GPS (with duplicate prevention)
+  
 const handleCheckIn = async (status) => {
     if (!("geolocation" in navigator)) {
         alert("Geolocation is not supported in this browser!");
@@ -408,16 +365,64 @@ const handleCheckIn = async (status) => {
     };
 
     // ✅ Updated Check-out with GPS
+// const handleCheckOut = () => {
+//     if (!eod.trim()) {
+//         alert("EOD report is required to check out.");
+//         return;
+//     }
+
+//     if (!("geolocation" in navigator)) {
+//         alert("Geolocation is not supported in this browser!");
+//         return;
+//     }
+
+//     navigator.geolocation.getCurrentPosition(
+//         async (pos) => {
+//             try {
+//                 const { latitude, longitude } = pos.coords;
+
+//                 const { data: updatedRecord } = await api.post('/employee/attendance', {
+//                     type: 'checkout',
+//                     eod,
+//                     ipAddress: ip,
+//                     latitude,
+//                     longitude,
+//                 });
+
+//                 setCheckOutModalOpen(false);
+//                 setEod('');
+//                 setTodayAttendance(updatedRecord);
+//                 setAttendance(prevAttendance =>
+//                     prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
+//                 );
+//             } catch (error) {
+//                 console.error("Check-out failed:", error);
+//                 alert(error.response?.data?.message || 'Check-out failed');
+//             }
+//         },
+//         (err) => {
+//             alert("⚠️ Location access is required for checkout!");
+//             console.error("GPS Error:", err);
+//         },
+//         { enableHighAccuracy: true }
+//     );
+// };
+
 const handleCheckOut = () => {
     if (!eod.trim()) {
+        // Use a more user-friendly modal or alert alternative here
         alert("EOD report is required to check out.");
         return;
     }
 
     if (!("geolocation" in navigator)) {
+        // Use a more user-friendly modal or alert alternative here
         alert("Geolocation is not supported in this browser!");
         return;
     }
+
+    // Capture the device type immediately before making the API call
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -430,6 +435,7 @@ const handleCheckOut = () => {
                     ipAddress: ip,
                     latitude,
                     longitude,
+                    isTouchDevice, // <-- Now passing this value to the backend
                 });
 
                 setCheckOutModalOpen(false);
@@ -440,10 +446,12 @@ const handleCheckOut = () => {
                 );
             } catch (error) {
                 console.error("Check-out failed:", error);
+                // Use a more user-friendly modal or alert alternative here
                 alert(error.response?.data?.message || 'Check-out failed');
             }
         },
         (err) => {
+            // Use a more user-friendly modal or alert alternative here
             alert("⚠️ Location access is required for checkout!");
             console.error("GPS Error:", err);
         },
