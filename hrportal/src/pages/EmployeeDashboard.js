@@ -1,5 +1,5 @@
 
-
+// // neww
 // import React, { useState, useEffect } from 'react';
 // import api from '../api/api';
 // import useAuth from '../hooks/useAuth';
@@ -11,6 +11,7 @@
 // import ThemeToggle from '../components/ThemeToggle';
 // import { useTheme } from '../context/ThemeContext';
 // import MotivationalQuotes from '../components/MotivationalQuotes';
+
 
 // const EmployeeDashboard = () => {
 //     const { user } = useAuth();
@@ -26,6 +27,23 @@
 //     const [notes, setNotes] = useState('');
 //     const [requestedLeaveType, setRequestedLeaveType] = useState(null);
 //     const { theme } = useTheme();
+
+//     const [ip, setIp] = useState("");
+
+//     const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+// useEffect(() => {
+//   const getIp = async () => {
+//     try {
+//       const res = await fetch("https://api.ipify.org?format=json");
+//       const data = await res.json();
+//       setIp(data.ip);
+//     } catch (err) {
+//       console.error("Failed to fetch IP:", err);
+//     }
+//   };
+//   getIp();
+// }, []);
 
 //     useEffect(() => {
 //         const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
@@ -71,54 +89,118 @@
 //         }
 //     };
 
-//     const handleCheckIn = async (status) => {
-//         try {
-//             const deviceInfo = navigator.userAgent;
-//             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+// const handleCheckIn = async (status) => {
+//     if (!("geolocation" in navigator)) {
+//         alert("Geolocation is not supported in this browser!");
+//         return;
+//     }
 
-//             const { data: newRecord } = await api.post('/employee/attendance', {
-//                 type: 'checkin',
-//                 status,
-//                 notes,
-//                 deviceInfo,
-//                 isTouchDevice
-//             });
+//     if (isCheckingIn) return; // prevent double submission
+//     setIsCheckingIn(true);
 
-//             setCheckInModalOpen(false);
-//             setNotes('');
-//             setTodayAttendance(newRecord);
-//             const { data: updatedProfile } = await api.get('/employee/profile');
-//             setProfile(updatedProfile);
-//             setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
-//         } catch (error) {
-//             console.error("Check-in failed:", error);
-//             alert(error.response?.data?.message || 'Check-in failed');
-//         }
-//     };
+//     navigator.geolocation.getCurrentPosition(
+//         async (pos) => {
+//             try {
+//                 const { latitude, longitude } = pos.coords;
+//                 const deviceInfo = navigator.userAgent;
+//                 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+//                 const { data: newRecord } = await api.post('/employee/attendance', {
+//                     type: 'checkin',
+//                     status,
+//                     notes,
+//                     deviceInfo,
+//                     ipAddress: ip,
+//                     latitude,
+//                     longitude,
+//                     isTouchDevice
+//                 });
+
+//                 setCheckInModalOpen(false);
+//                 setNotes('');
+//                 setTodayAttendance(newRecord);
+
+//                 const { data: updatedProfile } = await api.get('/employee/profile');
+//                 setProfile(updatedProfile);
+//                 setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
+//             } catch (error) {
+//                 console.error("Check-in failed:", error);
+//                 alert(error.response?.data?.message || 'Check-in failed');
+//             } finally {
+//                 setIsCheckingIn(false); // reset loading flag
+//             }
+//         },
+//         (err) => {
+//             alert("⚠️ Location access is required for attendance!");
+//             console.error("GPS Error:", err);
+//             setIsCheckingIn(false); // reset even if error
+//         },
+//         { enableHighAccuracy: true }
+//     );
+// };
+
 
 //     const proceedWithUnpaidLeave = () => {
 //         handleCheckIn(requestedLeaveType);
 //         setUnpaidLeaveModalOpen(false);
 //     };
 
-//     const handleCheckOut = async () => {
-//         if (!eod.trim()) {
-//             alert("EOD report is required to check out.");
-//             return;
-//         }
-//         try {
-//             const { data: updatedRecord } = await api.post('/employee/attendance', { type: 'checkout', eod });
-//             setCheckOutModalOpen(false);
-//             setEod('');
-//             setTodayAttendance(updatedRecord);
-//             setAttendance(prevAttendance =>
-//                 prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
-//             );
-//         } catch (error) {
-//             console.error("Check-out failed:", error);
-//             alert(error.response?.data?.message || 'Check-out failed');
-//         }
-//     };
+
+
+// const handleCheckOut = () => {
+//     if (!eod.trim()) {
+//         // Use a more user-friendly modal or alert alternative here
+//         alert("EOD report is required to check out.");
+//         return;
+//     }
+
+//     if (!("geolocation" in navigator)) {
+//         // Use a more user-friendly modal or alert alternative here
+//         alert("Geolocation is not supported in this browser!");
+//         return;
+//     }
+
+//     // Capture the device type immediately before making the API call
+//     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+//     navigator.geolocation.getCurrentPosition(
+//         async (pos) => {
+//             try {
+//                 const { latitude, longitude } = pos.coords;
+
+//                 const { data: updatedRecord } = await api.post('/employee/attendance', {
+//                     type: 'checkout',
+//                     eod,
+//                     ipAddress: ip,
+//                     latitude,
+//                     longitude,
+//                     isTouchDevice, // <-- Now passing this value to the backend
+//                 });
+
+//                 setCheckOutModalOpen(false);
+//                 setEod('');
+//                 setTodayAttendance(updatedRecord);
+//                 setAttendance(prevAttendance =>
+//                     prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
+//                 );
+//             } catch (error) {
+//                 console.error("Check-out failed:", error);
+//                 // Use a more user-friendly modal or alert alternative here
+//                 alert(error.response?.data?.message || 'Check-out failed');
+//             }
+//         },
+//         (err) => {
+//             // Use a more user-friendly modal or alert alternative here
+//             alert("⚠️ Location access is required for checkout!");
+//             console.error("GPS Error:", err);
+//         },
+//         { enableHighAccuracy: true }
+//     );
+// };
+
+
+//     const isAfterMidday = new Date().getHours() >= 12;
 
 //     if (isMobile) {
 //         return (
@@ -171,9 +253,12 @@
 //                 <div className="space-y-4">
 //                     <p>How would you like to mark your attendance?</p>
 //                     <div className="flex justify-around">
-//                         <Button onClick={() => handleCheckIn('Present')}>Full Day</Button>
+//                         {/* --- CHANGE: Conditionally render the Full Day button --- */}
+//                         {!isAfterMidday && (
+//                             <Button onClick={() => handleCheckIn('Present')}>Full Day</Button>
+//                         )}
 //                         <Button onClick={() => handleLeaveRequest('Half Day')} variant="secondary">Half Day</Button>
-//                         <Button onClick={() => handleLeaveRequest('Holiday')} variant="secondary">Take Holiday</Button>
+//                         {/* The "Take Holiday" button has been removed */}
 //                     </div>
 //                     <div className="mt-4">
 //                         <label htmlFor="notes" className="block text-sm font-medium mb-1">Optional Notes</label>
@@ -208,8 +293,8 @@
 //                 </div>
 //             </Modal>
 //             <div className="w-full overflow-x-auto">
-//   <MotivationalQuotes />
-// </div>
+//                 <MotivationalQuotes />
+//             </div>
 
 //         </div>
 //     );
@@ -217,7 +302,6 @@
 
 // export default EmployeeDashboard;
 
-// neww
 import React, { useState, useEffect } from 'react';
 import api from '../api/api';
 import useAuth from '../hooks/useAuth';
@@ -229,7 +313,7 @@ import Spinner from '../components/Spinner';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import MotivationalQuotes from '../components/MotivationalQuotes';
-
+import EmployeeLoader from '../components/EmployeeLoader';
 
 const EmployeeDashboard = () => {
     const { user } = useAuth();
@@ -250,18 +334,18 @@ const EmployeeDashboard = () => {
 
     const [isCheckingIn, setIsCheckingIn] = useState(false);
 
-useEffect(() => {
-  const getIp = async () => {
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const data = await res.json();
-      setIp(data.ip);
-    } catch (err) {
-      console.error("Failed to fetch IP:", err);
-    }
-  };
-  getIp();
-}, []);
+    useEffect(() => {
+        const getIp = async () => {
+            try {
+                const res = await fetch("https://api.ipify.org?format=json");
+                const data = await res.json();
+                setIp(data.ip);
+            } catch (err) {
+                console.error("Failed to fetch IP:", err);
+            }
+        };
+        getIp();
+    }, []);
 
     useEffect(() => {
         const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
@@ -307,158 +391,113 @@ useEffect(() => {
         }
     };
 
-  
-const handleCheckIn = async (status) => {
-    if (!("geolocation" in navigator)) {
-        alert("Geolocation is not supported in this browser!");
-        return;
-    }
+    const handleCheckIn = async (status) => {
+        if (!("geolocation" in navigator)) {
+            // Use a modal or a toast notification here instead of alert
+            alert("Geolocation is not supported in this browser!");
+            return;
+        }
 
-    if (isCheckingIn) return; // prevent double submission
-    setIsCheckingIn(true);
+        if (isCheckingIn) return;
+        setIsCheckingIn(true);
 
-    navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-            try {
-                const { latitude, longitude } = pos.coords;
-                const deviceInfo = navigator.userAgent;
-                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
+                    const deviceInfo = navigator.userAgent;
+                    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-                const { data: newRecord } = await api.post('/employee/attendance', {
-                    type: 'checkin',
-                    status,
-                    notes,
-                    deviceInfo,
-                    ipAddress: ip,
-                    latitude,
-                    longitude,
-                    isTouchDevice
-                });
+                    const { data: newRecord } = await api.post('/employee/attendance', {
+                        type: 'checkin',
+                        status,
+                        notes,
+                        deviceInfo,
+                        ipAddress: ip,
+                        latitude,
+                        longitude,
+                        isTouchDevice
+                    });
 
-                setCheckInModalOpen(false);
-                setNotes('');
-                setTodayAttendance(newRecord);
+                    setCheckInModalOpen(false);
+                    setNotes('');
+                    setTodayAttendance(newRecord);
 
-                const { data: updatedProfile } = await api.get('/employee/profile');
-                setProfile(updatedProfile);
-                setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
-            } catch (error) {
-                console.error("Check-in failed:", error);
-                alert(error.response?.data?.message || 'Check-in failed');
-            } finally {
-                setIsCheckingIn(false); // reset loading flag
-            }
-        },
-        (err) => {
-            alert("⚠️ Location access is required for attendance!");
-            console.error("GPS Error:", err);
-            setIsCheckingIn(false); // reset even if error
-        },
-        { enableHighAccuracy: true }
-    );
-};
-
+                    const { data: updatedProfile } = await api.get('/employee/profile');
+                    setProfile(updatedProfile);
+                    setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
+                } catch (error) {
+                    console.error("Check-in failed:", error);
+                    alert(error.response?.data?.message || 'Check-in failed');
+                } finally {
+                    setIsCheckingIn(false);
+                }
+            },
+            (err) => {
+                alert("⚠️ Location access is required for attendance!");
+                console.error("GPS Error:", err);
+                setIsCheckingIn(false);
+            },
+            { enableHighAccuracy: true }
+        );
+    };
 
     const proceedWithUnpaidLeave = () => {
         handleCheckIn(requestedLeaveType);
         setUnpaidLeaveModalOpen(false);
     };
 
-    // ✅ Updated Check-out with GPS
-// const handleCheckOut = () => {
-//     if (!eod.trim()) {
-//         alert("EOD report is required to check out.");
-//         return;
-//     }
+    const handleCheckOut = () => {
+        if (!eod.trim()) {
+            alert("EOD report is required to check out.");
+            return;
+        }
 
-//     if (!("geolocation" in navigator)) {
-//         alert("Geolocation is not supported in this browser!");
-//         return;
-//     }
+        if (!("geolocation" in navigator)) {
+            alert("Geolocation is not supported in this browser!");
+            return;
+        }
 
-//     navigator.geolocation.getCurrentPosition(
-//         async (pos) => {
-//             try {
-//                 const { latitude, longitude } = pos.coords;
+        if (isCheckingIn) return;
+        setIsCheckingIn(true);
 
-//                 const { data: updatedRecord } = await api.post('/employee/attendance', {
-//                     type: 'checkout',
-//                     eod,
-//                     ipAddress: ip,
-//                     latitude,
-//                     longitude,
-//                 });
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-//                 setCheckOutModalOpen(false);
-//                 setEod('');
-//                 setTodayAttendance(updatedRecord);
-//                 setAttendance(prevAttendance =>
-//                     prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
-//                 );
-//             } catch (error) {
-//                 console.error("Check-out failed:", error);
-//                 alert(error.response?.data?.message || 'Check-out failed');
-//             }
-//         },
-//         (err) => {
-//             alert("⚠️ Location access is required for checkout!");
-//             console.error("GPS Error:", err);
-//         },
-//         { enableHighAccuracy: true }
-//     );
-// };
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
 
-const handleCheckOut = () => {
-    if (!eod.trim()) {
-        // Use a more user-friendly modal or alert alternative here
-        alert("EOD report is required to check out.");
-        return;
-    }
+                    const { data: updatedRecord } = await api.post('/employee/attendance', {
+                        type: 'checkout',
+                        eod,
+                        ipAddress: ip,
+                        latitude,
+                        longitude,
+                        isTouchDevice,
+                    });
 
-    if (!("geolocation" in navigator)) {
-        // Use a more user-friendly modal or alert alternative here
-        alert("Geolocation is not supported in this browser!");
-        return;
-    }
-
-    // Capture the device type immediately before making the API call
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-    navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-            try {
-                const { latitude, longitude } = pos.coords;
-
-                const { data: updatedRecord } = await api.post('/employee/attendance', {
-                    type: 'checkout',
-                    eod,
-                    ipAddress: ip,
-                    latitude,
-                    longitude,
-                    isTouchDevice, // <-- Now passing this value to the backend
-                });
-
-                setCheckOutModalOpen(false);
-                setEod('');
-                setTodayAttendance(updatedRecord);
-                setAttendance(prevAttendance =>
-                    prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
-                );
-            } catch (error) {
-                console.error("Check-out failed:", error);
-                // Use a more user-friendly modal or alert alternative here
-                alert(error.response?.data?.message || 'Check-out failed');
-            }
-        },
-        (err) => {
-            // Use a more user-friendly modal or alert alternative here
-            alert("⚠️ Location access is required for checkout!");
-            console.error("GPS Error:", err);
-        },
-        { enableHighAccuracy: true }
-    );
-};
-
+                    setCheckOutModalOpen(false);
+                    setEod('');
+                    setTodayAttendance(updatedRecord);
+                    setAttendance(prevAttendance =>
+                        prevAttendance.map(att => att._id === updatedRecord._id ? updatedRecord : att)
+                    );
+                } catch (error) {
+                    console.error("Check-out failed:", error);
+                    alert(error.response?.data?.message || 'Check-out failed');
+                } finally {
+                    setIsCheckingIn(false);
+                }
+            },
+            (err) => {
+                alert("⚠️ Location access is required for checkout!");
+                console.error("GPS Error:", err);
+                setIsCheckingIn(false);
+            },
+            { enableHighAccuracy: true }
+        );
+    };
 
     const isAfterMidday = new Date().getHours() >= 12;
 
@@ -472,6 +511,12 @@ const handleCheckOut = () => {
     }
 
     if (loading) return <div className="flex justify-center items-center h-64"><Spinner /></div>;
+
+    // --- Main conditional rendering for the loader ---
+  if (isCheckingIn) {
+  return <EmployeeLoader name={profile?.name || user?.name} action={isCheckOutModalOpen ? "checkout" : "checkin"} />;
+}
+
 
     return (
         <div className={`min-h-screen p-6 space-y-6 bg-gradient-to-br rounded-b-[2rem] shadow-lg ${theme === 'dark' ? 'from-gray-900 to-black text-white' : 'from-blue-100 to-white text-gray-800'}`}>
@@ -497,11 +542,11 @@ const handleCheckOut = () => {
                             {todayAttendance.checkOut ? (
                                 <p>Checked Out: <span className="font-bold">{new Date(todayAttendance.checkOut).toLocaleTimeString()}</span></p>
                             ) : (
-                                <Button onClick={() => setCheckOutModalOpen(true)} variant="danger" className="mt-2">Check Out</Button>
+                                <Button onClick={() => setCheckOutModalOpen(true)} variant="danger" className="mt-2" disabled={isCheckingIn}>Check Out</Button>
                             )}
                         </div>
                     ) : (
-                        <Button onClick={() => setCheckInModalOpen(true)} variant="primary">Check In for Today</Button>
+                        <Button onClick={() => setCheckInModalOpen(true)} variant="primary" disabled={isCheckingIn}>Check In for Today</Button>
                     )}
                 </div>
             </div>
@@ -513,16 +558,14 @@ const handleCheckOut = () => {
                 <div className="space-y-4">
                     <p>How would you like to mark your attendance?</p>
                     <div className="flex justify-around">
-                        {/* --- CHANGE: Conditionally render the Full Day button --- */}
                         {!isAfterMidday && (
-                            <Button onClick={() => handleCheckIn('Present')}>Full Day</Button>
+                            <Button onClick={() => handleCheckIn('Present')} disabled={isCheckingIn}>Full Day</Button>
                         )}
-                        <Button onClick={() => handleLeaveRequest('Half Day')} variant="secondary">Half Day</Button>
-                        {/* The "Take Holiday" button has been removed */}
+                        <Button onClick={() => handleLeaveRequest('Half Day')} variant="secondary" disabled={isCheckingIn}>Half Day</Button>
                     </div>
                     <div className="mt-4">
                         <label htmlFor="notes" className="block text-sm font-medium mb-1">Optional Notes</label>
-                        <textarea id="notes" rows="3" className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g., Working from home..." />
+                        <textarea id="notes" rows="3" className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g., Working from home..." disabled={isCheckingIn} />
                     </div>
                 </div>
             </Modal>
@@ -532,8 +575,8 @@ const handleCheckOut = () => {
                     <p className="text-lg font-semibold text-red-600 dark:text-red-400">No paid leaves left.</p>
                     <p>This leave will be marked as unpaid. Proceed?</p>
                     <div className="flex justify-center space-x-4 pt-4">
-                        <Button onClick={() => setUnpaidLeaveModalOpen(false)} variant="secondary">Cancel</Button>
-                        <Button onClick={proceedWithUnpaidLeave} variant="danger">Proceed</Button>
+                        <Button onClick={() => setUnpaidLeaveModalOpen(false)} variant="secondary" disabled={isCheckingIn}>Cancel</Button>
+                        <Button onClick={proceedWithUnpaidLeave} variant="danger" disabled={isCheckingIn}>Proceed</Button>
                     </div>
                 </div>
             </Modal>
@@ -548,8 +591,9 @@ const handleCheckOut = () => {
                         value={eod}
                         onChange={(e) => setEod(e.target.value)}
                         placeholder="Summarize today's work..."
+                        disabled={isCheckingIn}
                     ></textarea>
-                    <Button onClick={handleCheckOut} className="w-full mt-4">Submit EOD and Check Out</Button>
+                    <Button onClick={handleCheckOut} className="w-full mt-4" disabled={isCheckingIn}>Submit EOD and Check Out</Button>
                 </div>
             </Modal>
             <div className="w-full overflow-x-auto">
@@ -561,3 +605,4 @@ const handleCheckOut = () => {
 };
 
 export default EmployeeDashboard;
+
