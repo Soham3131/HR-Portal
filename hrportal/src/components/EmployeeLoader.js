@@ -43,46 +43,40 @@ const EmployeeLoader = ({ name, action }) => {
   }, [name]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-10 bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 rounded-3xl shadow-2xl text-center max-w-lg mx-auto fadeIn">
-      {/* Glass Card */}
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 shadow-2xl w-full fadeInUp">
+    <div className="flex flex-col items-center justify-center min-h-[50vh] p-6">
+      {/* Card */}
+      <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 shadow-2xl w-[90%] sm:w-[420px] text-center border border-white/20 overflow-hidden">
+        
+        {/* Animated Gradient Glow */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-500 opacity-40 blur-3xl animate-gradientMove"></div>
         
         {/* Spinner */}
-        <div className="flex justify-center">
-          <Spinner className="w-16 h-16 text-indigo-600 spinSlow" />
+        <div className="relative flex justify-center">
+          <Spinner className="w-14 h-14 text-indigo-600 spinSlow" />
         </div>
 
-        {/* Action Title */}
-        <div className="mt-6 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-wide drop-shadow-lg bounce">
+        {/* Progress Bar */}
+        <div className="relative mt-4 h-2 w-3/4 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-500 animate-progressBar"></div>
+        </div>
+
+        {/* Title */}
+        <div className="mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-wide drop-shadow-md fadeIn">
           {action === "checkin" ? "✨ Checking In..." : "🌙 Checking Out..."}
         </div>
 
-        {/* Funny Rotating Quote */}
+        {/* Quote */}
         {quote && (
-          <div className="mt-6 text-lg sm:text-xl font-semibold italic bg-gradient-to-r from-indigo-600 via-pink-500 to-yellow-500 text-transparent bg-clip-text fadeIn quoteText">
+          <div className="mt-4 text-lg sm:text-xl font-semibold italic bg-gradient-to-r from-indigo-600 via-pink-500 to-yellow-500 text-transparent bg-clip-text fadeIn quoteText">
             {quote}
           </div>
         )}
-
-        {/* User Name Highlight */}
-        <div className="mt-8 text-2xl sm:text-3xl font-extrabold text-indigo-700 dark:text-indigo-400 tracking-wider pulse">
-          🌟 {name} 🌟
-        </div>
       </div>
 
-      {/* Inline CSS Animations */}
+      {/* Animations */}
       <style>{`
         .fadeIn {
-          animation: fadeIn 1s ease-in-out;
-        }
-        .fadeInUp {
-          animation: fadeInUp 1s ease-in-out;
-        }
-        .pulse {
-          animation: pulse 2s infinite;
-        }
-        .bounce {
-          animation: bounce 1.8s infinite;
+          animation: fadeIn 0.8s ease-in-out;
         }
         .spinSlow {
           animation: spin 3s linear infinite;
@@ -90,26 +84,30 @@ const EmployeeLoader = ({ name, action }) => {
         .quoteText {
           animation: fadeIn 1s ease-in-out;
         }
-
-        @keyframes fadeIn {
-          0% { opacity: 0; }
-          100% { opacity: 1; }
-        }
-        @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.7; }
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes gradientMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradientMove {
+          background-size: 200% 200%;
+          animation: gradientMove 8s ease infinite;
+        }
+        @keyframes progressBar {
+          0% { left: -50%; width: 50%; }
+          50% { left: 25%; width: 60%; }
+          100% { left: 100%; width: 50%; }
+        }
+        .animate-progressBar {
+          animation: progressBar 2.2s ease-in-out infinite;
         }
       `}</style>
     </div>
