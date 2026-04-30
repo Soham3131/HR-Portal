@@ -53,6 +53,7 @@ exports.loginHR = async (req, res) => {
                 _id: hr._id,
                 name: hr.name,
                 email: hr.email,
+                role: 'hr',
                 token: generateToken(hr._id, 'hr'),
             });
         } else {
@@ -95,9 +96,9 @@ exports.requestRegistrationOtp = async (req, res) => {
             <h2 style="font-size: 24px; letter-spacing: 2px;"><b>${otp}</b></h2>
             <p>This OTP is valid for 10 minutes.</p>
         `;
-// siddhibansal0808@gmail.com
+        const adminEmails = [process.env.ADMIN_EMAIL_1, process.env.ADMIN_EMAIL_2].filter(Boolean);
         await sendEmail({
-            to: 'sohamdang0@gmail.com' ,
+            to: adminEmails,
             subject: `New Employee Registration Request: ${name}`,
             html: hrApprovalMessage,
         });

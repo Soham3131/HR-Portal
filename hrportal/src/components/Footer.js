@@ -1,137 +1,15 @@
-
-
-// import React from 'react';
-// import { motion } from 'framer-motion';
-// import { FaEnvelope, FaLinkedin } from 'react-icons/fa';
-
-// export default function Footer() {
-//   return (
-//     <motion.footer
-//       initial={{ opacity: 0, y: 50 }}
-//       whileInView={{ opacity: 1, y: 0 }}
-//       transition={{ duration: 1 }}
-//       viewport={{ once: true }}
-//       className="bg-gradient-to-r from-[#2d3f4e] via-[#786d9d] to-[#4a89ac] text-white py-10 relative shadow-lg rounded-t-3xl overflow-hidden"
-//     >
-//       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-
-//         {/* Left - Company */}
-//         <motion.div
-//           initial={{ opacity: 0, x: -40 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           transition={{ duration: 1 }}
-//           className="text-left"
-//         >
-//           <h2 className="text-2xl font-bold">Avani Enterprises</h2>
-//           <p className="italic text-sm mt-2 text-white/80">
-//             Empowering workforce with trust & technology
-//           </p>
-//         </motion.div>
-
-//         {/* Center - Title and Tagline */}
-//         <motion.div
-//           initial={{ opacity: 0 }}
-//           whileInView={{ opacity: 1 }}
-//           transition={{ delay: 0.2, duration: 1 }}
-//           className="text-center"
-//         >
-//           <h1 className="text-3xl font-extrabold text-orange-400 drop-shadow-sm">
-//             HR Portal
-//           </h1>
-//           <p className="italic text-white/90 mt-1">
-//             Simplifying Human Resources, One Click at a Time
-//           </p>
-
-//           {/* Animated underline from left to right */}
-//           <div className="relative w-32 h-[3px] mx-auto mt-3 overflow-hidden rounded-full">
-//             <div className="absolute left-0 top-0 h-full bg-orange-400 animate-underline w-0" />
-//           </div>
-//         </motion.div>
-
-//         {/* Right - Icons */}
-//         <motion.div
-//           initial={{ opacity: 0, x: 40 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           transition={{ duration: 1 }}
-//           className="text-right flex justify-end items-center gap-4"
-//         >
-//           <a
-//             href="mailto:hr@avani.com"
-//             className="text-xl hover:text-orange-400 transition duration-300"
-//           >
-//             <FaEnvelope />
-//           </a>
-//           <a
-//             href="https://linkedin.com"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//             className="text-xl hover:text-orange-400 transition duration-300"
-//           >
-//             <FaLinkedin />
-//           </a>
-//         </motion.div>
-//       </div>
-
-//       {/* Bottom - Made with love */}
-//       <motion.div
-//         initial={{ opacity: 0, y: 20 }}
-//         whileInView={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 1 }}
-//         className="text-center mt-8 text-sm text-white/70"
-//       >
-//         <p>© 2025 Avani HR Portal. All rights reserved.</p>
-//         <p className="mt-1">
-//           Made with{' '}
-//           <span className="inline-block relative">
-//             <span className="inline-block animate-heartbeat text-red-500 text-lg transition-transform duration-500 hover:scale-[15]">
-//               ❤️
-//             </span>
-//           </span>{' '}
-//           by{' '}
-//           <span className="text-orange-400 font-semibold">Soham</span>
-//         </p>
-//       </motion.div>
-
-//       {/* Custom styles */}
-//       <style>{`
-//         @keyframes heartbeat {
-//           0%, 100% {
-//             transform: scale(1);
-//           }
-//           50% {
-//             transform: scale(1.3);
-//           }
-//         }
-
-//         .animate-heartbeat {
-//           animation: heartbeat 1.8s infinite ease-in-out;
-//         }
-
-//         @keyframes underline {
-//           0% {
-//             width: 0%;
-//           }
-//           100% {
-//             width: 100%;
-//           }
-//         }
-
-//         .animate-underline {
-//           animation: underline 2s ease-out forwards;
-//         }
-//       `}</style>
-//     </motion.footer>
-//   );
-// }
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaLinkedin } from 'react-icons/fa';
-import logo from "../assets/logo1.png"
+import { FaEnvelope, FaLinkedin, FaInstagram, FaFacebook, FaTwitter, FaMapMarkerAlt } from 'react-icons/fa';
+import logo from "../assets/logo1.png";
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
   const [showBigHeart, setShowBigHeart] = useState(false);
+
+  // Address for Google Maps Link
+  const address = "Tower B, 3rd Floor, Unitech Cyber Park, Sector 39, Gurugram, Haryana 122002";
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
   return (
     <motion.footer
@@ -139,7 +17,7 @@ export default function Footer() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
       viewport={{ once: true }}
-      className="bg-gradient-to-r from-[#2d3f4e] via-[#786d9d] to-[#4a89ac] text-white py-10 relative shadow-lg rounded-t-3xl overflow-hidden"
+      className="bg-[#433020] text-white py-12 relative shadow-lg rounded-t-3xl overflow-hidden font-sans"
     >
       {/* Fullscreen Heart Popup */}
       <AnimatePresence>
@@ -157,52 +35,100 @@ export default function Footer() {
         )}
       </AnimatePresence>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-        {/* Left */}
-        <div className="text-left">
-          <Link to="/" className="flex items-center gap-3 hover:scale-105 transition">
-    <img src={logo} alt="Avani Enterprises Logo" className="h-[5rem] mt-2 w-auto" />
-    <span className="text-2xl font-bold tracking-wide">
-        AVANI ENTERPRISES
-    </span>
-</Link>
-         
-          <p className="italic text-sm mt-2 text-white/80">
-            Empowering workforce with trust & technology
-          </p>
-        </div>
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
 
-        {/* Center */}
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-orange-400 drop-shadow-sm">
-            HR Portal
-          </h1>
-          <p className="italic text-white/90 mt-1">
-            Simplifying Human Resources, One Click at a Time
+        {/* -- Column 1: Branding & Contact -- */}
+        <div className="flex flex-col space-y-6">
+          <Link to="/" className="flex items-center gap-3 hover:scale-105 transition w-fit">
+            <img src={logo} alt="Avani Enterprises Logo" className="h-16 w-auto" />
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold tracking-wide leading-none">AVANI</span>
+              <span className="text-lg font-medium tracking-wide text-[#fff5e6]">ENTERPRISES</span>
+            </div>
+          </Link>
+
+          <p className="text-white/80 text-sm italic max-w-xs">
+            Empowering workforce with trust & technology. Simplifying Human Resources, One Click at a Time.
           </p>
-          <div className="relative w-32 h-[3px] mx-auto mt-3 overflow-hidden rounded-full">
-            <div className="absolute left-0 top-0 h-full bg-orange-400 animate-underline w-0" />
+
+          {/* Clickable Address */}
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 text-white/90 hover:text-[#8a6144] transition group"
+          >
+            <FaMapMarkerAlt className="mt-1 text-[#fff5e6] group-hover:scale-110 transition shrink-0" size={18} />
+            <span className="text-sm leading-relaxed max-w-[250px]">
+              {address}
+            </span>
+          </a>
+
+          {/* Social Icons */}
+          <div className="flex items-center gap-4 mt-2">
+            <SocialIcon href="https://www.instagram.com/avanienterprises.branding/" icon={<FaInstagram />} />
+            <SocialIcon href="https://www.facebook.com/people/Avani-Enterprises/61576229620845/?rdid=fw5wiWOMhyXHBVrN&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1DKFWQiBe4%2F" icon={<FaFacebook />} />
+            <SocialIcon href="https://x.com/avanienterprises" icon={<FaTwitter />} />
+            <SocialIcon href="https://linkedin.com" icon={<FaLinkedin />} />
+            <SocialIcon href="mailto:kp@avanienterprises.in" icon={<FaEnvelope />} />
           </div>
         </div>
 
-        {/* Right */}
-        <div className="text-right flex justify-end items-center gap-4">
-          <a
-            href="mailto:kp@avanienterprises.in"
-            className="text-xl hover:text-orange-400 transition duration-300"
-          >
-            <FaEnvelope />
-          </a>
-          <a
-            href="https://linkedin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xl hover:text-orange-400 transition duration-300"
-          >
-            <FaLinkedin />
-          </a>
+        {/* -- Column 2: Key Features -- */}
+        <div className="flex flex-col space-y-6 md:pl-10">
+          <h1 className="text-3xl font-extrabold text-[#fff5e6] drop-shadow-sm mb-6">
+            <span className="border-b-4 border-[#fff5e6] pb-1 rounded-sm">Our Ecosystem</span>
+          </h1>
+
+          <h3 className="text-xl font-bold text-[#fff5e6] relative inline-block w-fit">
+            Our Solutions
+            <span className="absolute -bottom-2 left-0 w-1/2 h-[2px] bg-[#fff5e6] rounded-full"></span>
+          </h3>
+          <ul className="space-y-3 text-white/80">
+            {[
+              { name: 'HR Management', url: 'https://Hrportal.avanienterprises.in' },
+              { name: 'Project & Leads', url: 'https://Projectmanagement.avanienterprises.in' },
+              { name: 'Sales Edge Portal', url: 'https://crm-sales-portal.vercel.app/' },
+              { name: 'Placement System', url: 'https://Projectmanagement.avanienterprises.in' },
+              { name: 'Student & Agency', url: 'https://placement-management-system-six.vercel.app' },
+              { name: 'E-Commerce Store', url: 'https://shoes-ecommerce-iota.vercel.app' }
+            ].map((solution, idx) => (
+              <li key={idx}>
+                <a
+                  href={solution.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 group hover:text-white transition"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#fff5e6] group-hover:scale-150 transition"></span>
+                  {solution.name}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
+
+        {/* -- Column 3: Location Map -- */}
+        <div className="flex flex-col space-y-6">
+          <h3 className="text-xl font-bold text-[#fff5e6] relative inline-block w-fit">
+            Visit Us
+            <span className="absolute -bottom-2 left-0 w-1/2 h-[2px] bg-[#fff5e6] rounded-full"></span>
+          </h3>
+          <div className="w-full h-48 rounded-xl overflow-hidden shadow-lg border-2 border-white/10 hover:border-[#8a6144]/50 transition duration-300">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3507.632289656461!2d77.0516686761066!3d28.46049889176121!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d1839e9f2913f%3A0xa199b90c29f2c3d5!2sUnitech%20Cyber%20Park!5e0!3m2!1sen!2sin!4v1709228892834!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Office Location"
+              className="w-full h-full"
+            ></iframe>
+          </div>
+        </div>
+
       </div>
 
       {/* Bottom - Made with love line */}
@@ -210,54 +136,46 @@ export default function Footer() {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="text-center mt-8 text-sm text-white/70"
+        className="text-center mt-12 pt-8 border-t border-white/10 text-sm text-white/50"
       >
-        <motion.p
-          onMouseEnter={() => setShowBigHeart(true)}
-          onMouseLeave={() => setShowBigHeart(false)}
-          whileHover={{
-            scale: 1.05,
-            textShadow: '0px 0px 8px rgba(255, 255, 255, 0.7)',
-          }}
-          transition={{ type: 'spring', stiffness: 300 }}
-          className="inline-block cursor-pointer"
-        >
-          Made with{' '}
-          <span className="inline-block animate-heartbeat text-red-500 text-lg">
-            ❤️
-          </span>{' '}
-          by <span className="text-orange-400 font-semibold">Soham</span>
-        </motion.p>
+        <div className="flex flex-col md:flex-row justify-center items-center gap-2">
+          <p>© 2025 Avani HR Portal. All rights reserved.</p>
+          <span className="hidden md:block mx-2">|</span>
+          <Link to="/privacy-policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
+          <span className="hidden md:block mx-2">|</span>
+          <motion.p
+            onMouseEnter={() => setShowBigHeart(true)}
+            onMouseLeave={() => setShowBigHeart(false)}
+            whileHover={{ scale: 1.05 }}
+            className="inline-block cursor-pointer flex items-center gap-1"
+          >
+            Made with <span className="animate-heartbeat text-red-500 text-lg">❤️</span> by <span className="text-[#fff5e6] font-semibold">Soham</span>
+          </motion.p>
+        </div>
       </motion.div>
 
       {/* Custom styles */}
       <style>{`
         @keyframes heartbeat {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.3);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.3); }
         }
-
         .animate-heartbeat {
           animation: heartbeat 1.8s infinite ease-in-out;
-        }
-
-        @keyframes underline {
-          0% {
-            width: 0%;
-          }
-          100% {
-            width: 100%;
-          }
-        }
-
-        .animate-underline {
-          animation: underline 2s ease-out forwards;
         }
       `}</style>
     </motion.footer>
   );
 }
+
+// Helper Component for Social Icons
+const SocialIcon = ({ href, icon }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-[#8a6144] hover:text-white transition-all duration-300 hover:scale-110"
+  >
+    {icon}
+  </a>
+);

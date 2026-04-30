@@ -9,9 +9,9 @@ const StatCard = ({ title, value, icon, colorClass = 'text-blue-500' }) => {
         <div className={`text-4xl ${colorClass}`}>
           {icon}
         </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
+        <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+          <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 truncate uppercase tracking-wider">{title}</p>
+          <p className="text-xl sm:text-2xl font-black text-[#433020]">{value}</p>
         </div>
       </div>
     </Card>

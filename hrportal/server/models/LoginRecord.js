@@ -45,9 +45,9 @@ const loginRecordSchema = new mongoose.Schema({
     required: true,
   },
   deviceModel: {
-  type: String,
-  default: "Unknown",
-},
+    type: String,
+    default: "Unknown",
+  },
 
   action: {
     type: String,
@@ -80,10 +80,10 @@ const loginRecordSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Auto-delete logs older than 90 days
+// Auto-delete logs older than 30 days (1 month)
 loginRecordSchema.index(
   { createdAt: 1 },
-  { expireAfterSeconds: 7776000 } // ~90 days
+  { expireAfterSeconds: 2592000 } // 30 days
 );
 
 const LoginRecord = mongoose.model('LoginRecord', loginRecordSchema);

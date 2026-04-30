@@ -7,6 +7,8 @@ const Button = ({ children, onClick, type = 'button', variant = 'primary', class
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    brand: 'bg-[#8a6144] text-white hover:bg-[#6b4d36] focus:ring-[#8a6144] shadow-lg hover:shadow-xl transform hover:-translate-y-0.5',
+    custom: '',
   };
   const disabledStyle = 'opacity-50 cursor-not-allowed';
 

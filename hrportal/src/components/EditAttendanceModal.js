@@ -62,10 +62,10 @@ const EditAttendanceModal = ({ isOpen, onClose, record, onUpdate }) => {
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Edit Attendance for ${record?.employeeId?.name}`}>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="status" name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    <label htmlFor="status" className="block text-sm font-bold text-[#433020] dark:text-gray-200 mb-2">Status</label>
+                    <select id="status" name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full p-3 border border-[#8a6144]/30 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8a6144] dark:focus:ring-gray-500 bg-white/50 dark:bg-gray-700 text-[#433020] dark:text-gray-200 outline-none transition-all">
                         <option value="Present">Present</option>
                         <option value="Half Day">Half Day</option>
                         <option value="Holiday">Holiday</option>
@@ -73,20 +73,20 @@ const EditAttendanceModal = ({ isOpen, onClose, record, onUpdate }) => {
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="checkIn" className="block text-sm font-medium text-gray-700">Check In Time</label>
-                    <input type="datetime-local" id="checkIn" name="checkIn" value={formData.checkIn} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md"/>
+                    <label htmlFor="checkIn" className="block text-sm font-bold text-[#433020] dark:text-gray-200 mb-2">Check In Time</label>
+                    <input type="datetime-local" id="checkIn" name="checkIn" value={formData.checkIn} onChange={handleChange} className="mt-1 block w-full p-3 border border-[#8a6144]/30 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8a6144] dark:focus:ring-gray-500 bg-white/50 dark:bg-gray-700 text-[#433020] dark:text-gray-200 outline-none transition-all" />
                 </div>
-                 <div>
-                    <label htmlFor="checkOut" className="block text-sm font-medium text-gray-700">Check Out Time</label>
-                    <input type="datetime-local" id="checkOut" name="checkOut" value={formData.checkOut} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md"/>
+                <div>
+                    <label htmlFor="checkOut" className="block text-sm font-bold text-[#433020] dark:text-gray-200 mb-2">Check Out Time</label>
+                    <input type="datetime-local" id="checkOut" name="checkOut" value={formData.checkOut} onChange={handleChange} className="mt-1 block w-full p-3 border border-[#8a6144]/30 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8a6144] dark:focus:ring-gray-500 bg-white/50 dark:bg-gray-700 text-[#433020] dark:text-gray-200 outline-none transition-all" />
                 </div>
-                 <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows="3" className="mt-1 block w-full p-2 border border-gray-300 rounded-md"/>
+                <div>
+                    <label htmlFor="notes" className="block text-sm font-bold text-[#433020] dark:text-gray-200 mb-2">Notes</label>
+                    <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows="3" className="mt-1 block w-full p-3 border border-[#8a6144]/30 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8a6144] dark:focus:ring-gray-500 bg-white/50 dark:bg-gray-700 text-[#433020] dark:text-gray-200 outline-none transition-all resize-none" />
                 </div>
-                <div className="flex justify-end space-x-2">
+                <div className="flex justify-end space-x-3 pt-4">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Save Changes</Button>
+                    <Button type="submit" variant="brand">Save Changes</Button>
                 </div>
             </form>
         </Modal>

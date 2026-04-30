@@ -31,7 +31,7 @@ const RegisterHRPage = () => {
       await registerHR({ name, email, password });
       navigate('/hr/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message );
+      setError(err.response?.data?.message);
       setLoading(false);
     }
   };

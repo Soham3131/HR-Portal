@@ -24,9 +24,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (email, password, role) => {
+  const login = async (email, password, role, deviceInfo) => {
     const url = role === 'hr' ? '/auth/login/hr' : '/auth/login/employee';
-    const { data } = await api.post(url, { email, password });
+
+    // Prepare request body - include deviceInfo and isTouchDevice for employee logins
+    const requestBody = { email, password };
+    if (role === 'employee' && deviceInfo) {
+      requestBody.deviceInfo = deviceInfo;
+      // Detect if device has touch capability
+      requestBody.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    }
+
+    const { data } = await api.post(url, requestBody);
     if (data) {
       const userData = { ...data, role };
       localStorage.setItem('userInfo', JSON.stringify(userData));
@@ -40,12 +49,12 @@ export const AuthProvider = ({ children }) => {
     const { data } = await api.post('/auth/register/request-otp', userData);
     return data; // Return the success message
   };
- 
+
   const registerHR = async ({ name, email, password }) => {
-  const { data } = await api.post('/auth/register-hr', { name, email, password });
-  localStorage.setItem('userInfo', JSON.stringify({ ...data, role: 'hr' }));
-  setUser({ ...data, role: 'hr' });
-};
+    const { data } = await api.post('/auth/register-hr', { name, email, password });
+    localStorage.setItem('userInfo', JSON.stringify({ ...data, role: 'hr' }));
+    setUser({ ...data, role: 'hr' });
+  };
 
   const verifyAndRegister = async (email, otp) => {
     const { data } = await api.post('/auth/register/verify', { email, otp });
@@ -94,3 +103,5 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+
+

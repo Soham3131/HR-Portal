@@ -46,10 +46,10 @@ const EmployeeLoader = ({ name, action }) => {
     <div className="flex flex-col items-center justify-center min-h-[50vh] p-6">
       {/* Card */}
       <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 shadow-2xl w-[90%] sm:w-[420px] text-center border border-white/20 overflow-hidden">
-        
+
         {/* Animated Gradient Glow */}
         <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-500 opacity-40 blur-3xl animate-gradientMove"></div>
-        
+
         {/* Spinner */}
         <div className="relative flex justify-center">
           <Spinner className="w-14 h-14 text-indigo-600 spinSlow" />

@@ -78,13 +78,20 @@ const HRDashboard = () => {
         setEditModalOpen(true);
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-100 via-white to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"><Spinner /></div>;
+    if (loading) return (
+        <div className="flex justify-center items-center h-screen bg-gradient-to-br from-[#fff5e6] via-white to-[#f5e6d3] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-white/50">
+                <Spinner />
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen px-6 py-8 bg-gradient-to-br from-indigo-100 via-white to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-white">HR Admin Dashboard</h1>
-                
+        <div className="min-h-screen px-4 md:px-8 py-6 bg-gradient-to-br from-[#fff5e6] via-[#f5e6d3] to-[#fff5e6] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <h1 className="text-2xl md:text-4xl font-extrabold text-[#433020] dark:text-white drop-shadow-sm tracking-tight">
+                    <span className="text-[#8a6144]">HR Admin</span> Dashboard
+                </h1>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -94,12 +101,15 @@ const HRDashboard = () => {
                 <div onClick={() => setNotMarkedModalOpen(true)} className="cursor-pointer"><StatCard title="Not Marked Today" value={todayStats.notMarkedToday} colorClass="text-red-500" /></div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow mt-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Daily Attendance Log</h2>
+            <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 dark:text-white p-5 md:p-8 rounded-3xl shadow-xl shadow-[#433020]/5 border border-white/50 mt-8 transition-all hover:shadow-2xl hover:shadow-[#433020]/10">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#433020] dark:text-gray-100 flex items-center gap-2">
+                        <span className="w-1.5 h-8 bg-[#8a6144] rounded-full inline-block"></span>
+                        Daily Attendance Log
+                    </h2>
                     <div className="mt-4 sm:mt-0">
                         <label htmlFor="filterDate" className="mr-2 text-sm font-medium">Filter by Date:</label>
-                        <input type="date" id="filterDate" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-black dark:text-white"/>
+                        <input type="date" id="filterDate" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-black dark:text-white" />
                     </div>
                 </div>
                 <AttendanceLog attendance={filteredAttendance} onEdit={handleEditClick} />
@@ -121,7 +131,7 @@ const HRDashboard = () => {
             </Modal>
 
             <Modal isOpen={isOnLeaveModalOpen} onClose={() => setOnLeaveModalOpen(false)} title="Employees on Leave Today">
-                 <ul className="divide-y divide-gray-200 dark:divide-gray-600">
+                <ul className="divide-y divide-gray-200 dark:divide-gray-600">
                     {todayStats.onLeaveTodayList.length > 0 ? todayStats.onLeaveTodayList.map(rec => (
                         <li key={rec._id} className="py-3">
                             <p className="font-medium text-gray-800 dark:text-white">{rec.employeeId.name}</p>
@@ -153,9 +163,9 @@ const HRDashboard = () => {
                     </table>
                 </div>
             </Modal>
-           <div className="w-full overflow-x-auto">
-  <MotivationalQuotes />
-</div>
+            <div className="w-full overflow-x-auto">
+                <MotivationalQuotes />
+            </div>
 
         </div>
     );

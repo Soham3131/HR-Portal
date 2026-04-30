@@ -56,17 +56,19 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onUpdate }) => {
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Edit Profile - ${employee.name}`}>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <Input label="Name" name="name" value={formData.name} onChange={handleChange} />
-                <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
-                <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-                <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
-                <Input label="Salary (₹)" name="salary" type="number" value={formData.salary} onChange={handleChange} />
-                <Input label="Joining Date" name="joiningDate" type="date" value={formData.joiningDate} onChange={handleChange} />
-                <Input label="Holidays Left" name="holidaysLeft" type="number" step="0.5" value={formData.holidaysLeft} onChange={handleChange} />
-                <div className="flex justify-end space-x-2 pt-4">
-                    <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Save Changes</Button>
+            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input label="Name" name="name" value={formData.name} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Department" name="department" value={formData.department} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Salary (₹)" name="salary" type="number" value={formData.salary} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Joining Date" name="joiningDate" type="date" value={formData.joiningDate} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                    <Input label="Holidays Left" name="holidaysLeft" type="number" step="0.5" value={formData.holidaysLeft} onChange={handleChange} className="bg-white/50 dark:bg-gray-700/50 border-[#8a6144]/20 focus:ring-[#8a6144]" />
+                </div>
+                <div className="flex justify-end space-x-3 pt-6 mt-4 border-t border-[#8a6144]/10 dark:border-gray-700">
+                    <Button type="button" variant="secondary" onClick={onClose} className="px-6">Cancel</Button>
+                    <Button type="submit" variant="brand" className="px-6">Save Changes</Button>
                 </div>
             </form>
         </Modal>

@@ -66,6 +66,12 @@ const AttendanceSchema = new mongoose.Schema({
 // ✅ Prevent duplicate attendance for same employee on same date
 AttendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
 
+// ✅ Optimize querying attendance by date descending (HR Dashboard & month fetching)
+AttendanceSchema.index({ date: -1 });
+
+// ✅ Optimize querying EOD reports
+AttendanceSchema.index({ eod: 1 });
+
 const Attendance = mongoose.model('Attendance', AttendanceSchema);
 module.exports = Attendance;
 

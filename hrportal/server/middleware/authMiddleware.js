@@ -12,8 +12,9 @@ const protect = (userType) => async (req, res, next) => {
 
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            
+
             // Check if the token's user type matches the required type
+            console.log(`🔐 [Auth Middleware] Checking role: decoded.role='${decoded.role}', required='${userType}', url='${req.originalUrl}'`);
             if (decoded.role !== userType) {
                 return res.status(403).json({ message: 'Not authorized for this role' });
             }
@@ -29,15 +30,15 @@ const protect = (userType) => async (req, res, next) => {
                 return res.status(401).json({ message: 'Not authorized, user not found' });
             }
 
-            next();
+            return next();
         } catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            console.error('Authentication error:', error.message);
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
 
     if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 

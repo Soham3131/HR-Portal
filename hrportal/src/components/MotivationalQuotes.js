@@ -482,7 +482,7 @@ const MotivationalQuotes = () => {
 
   const quoteStyle = {
     fontFamily: font,
-    fontSize: "2.5rem",
+    fontSize: "clamp(1.5rem, 5vw, 2.5rem)",
     fontWeight: "bold",
     backgroundImage: gradient,
     WebkitBackgroundClip: "text",

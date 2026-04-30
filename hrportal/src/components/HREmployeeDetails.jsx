@@ -19,24 +19,24 @@ const HREmployeeDetails = ({ employee, attendance, onUpdate }) => {
             <Card>
                 <h3 className="text-lg font-bold text-gray-800">{employee.name}</h3>
                 <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <p><span className="font-semibold">Email:</span> {employee.email}</p>
+                    <p className="break-all"><span className="font-semibold">Email:</span> {employee.email}</p>
                     <p><span className="font-semibold">Phone:</span> {employee.phone || 'N/A'}</p>
                     <p><span className="font-semibold">DOB:</span> {new Date(employee.dob).toLocaleDateString()}</p>
                     <p><span className="font-semibold">Holidays Left:</span> {employee.holidaysLeft}</p>
-                    <p className="sm:col-span-2"><span className="font-semibold">Address:</span> {employee.address || 'N/A'}</p>
+                    <p className="sm:col-span-2 break-words"><span className="font-semibold">Address:</span> {employee.address || 'N/A'}</p>
                 </div>
             </Card>
 
             {/* Attendance Log */}
-            <AttendanceLog 
-                attendance={attendance} 
+            <AttendanceLog
+                attendance={attendance}
                 title={`${employee.name}'s Attendance`}
                 onEdit={handleEditClick} // Pass the edit handler
             />
 
             {/* Edit Modal */}
             {selectedRecord && (
-                <EditAttendanceModal 
+                <EditAttendanceModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
                     record={selectedRecord}

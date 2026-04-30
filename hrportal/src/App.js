@@ -12,8 +12,8 @@ import { ThemeProvider } from "./context/ThemeContext"
 //       <Router>
 //         <Layout>
 //              <ThemeProvider attribute="class"><AppRouter /></ThemeProvider>
-          
-          
+
+
 //         </Layout>
 //       </Router>
 //     </AuthProvider>

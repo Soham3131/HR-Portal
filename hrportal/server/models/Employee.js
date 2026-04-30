@@ -61,6 +61,24 @@ const EmployeeSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    bankDetails: {
+        accountNumber: { type: String, default: '' },
+        ifscCode: { type: String, default: '' },
+        bankName: { type: String, default: '' },
+        accountHolderName: { type: String, default: '' }
+    },
+    upiId: {
+        type: String,
+        default: ''
+    },
+    gstNumber: {
+        type: String,
+        default: ''
+    },
+    panCardNumber: {
+        type: String,
+        default: ''
+    },
     isVerified: {
         type: Boolean,
         default: false,

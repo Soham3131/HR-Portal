@@ -1,11 +1,12 @@
 const Employee = require('../models/Employee');
 const Attendance = require('../models/Attendance');
-const SalaryRecord = require('../models/SalaryRecord'); 
+const SalaryRecord = require('../models/SalaryRecord');
 const SystemConfig = require('../models/SystemConfig');
 const Announcement = require('../models/Announcement');
-const LoginRecord = require('../models/LoginRecord'); 
-const LeaveRequest = require('../models/LeaveRequest'); 
+const LoginRecord = require('../models/LoginRecord');
+const LeaveRequest = require('../models/LeaveRequest');
 const Penalty = require('../models/Penalty');
+const sendEmail = require('../utils/sendEmail');
 
 
 
@@ -48,6 +49,18 @@ exports.updateEmployeeByHR = async (req, res) => {
             employee.salary = req.body.salary || employee.salary;
             employee.joiningDate = req.body.joiningDate || employee.joiningDate;
 
+            // Update bank and tax details by HR
+            if (req.body.bankDetails) {
+                employee.bankDetails = {
+                    bankName: req.body.bankDetails.bankName ?? employee.bankDetails?.bankName,
+                    accountNumber: req.body.bankDetails.accountNumber ?? employee.bankDetails?.accountNumber,
+                    ifscCode: req.body.bankDetails.ifscCode ?? employee.bankDetails?.ifscCode,
+                    accountHolderName: req.body.bankDetails.accountHolderName ?? employee.bankDetails?.accountHolderName ?? employee.name
+                };
+            }
+            if (req.body.upiId !== undefined) employee.upiId = req.body.upiId;
+            if (req.body.panCardNumber !== undefined) employee.panCardNumber = req.body.panCardNumber;
+
             const updatedEmployee = await employee.save();
             res.json(updatedEmployee);
         } else {
@@ -58,15 +71,22 @@ exports.updateEmployeeByHR = async (req, res) => {
     }
 };
 
-// @desc    Delete an employee
+// @desc    Toggle employee status (Inactivate/Activate)
 exports.deleteEmployee = async (req, res) => {
     try {
         const employee = await Employee.findById(req.params.id);
         if (employee) {
+            /* 
+            // Original delete code commented out below
             await employee.deleteOne();
-            // Also remove their attendance records
             await Attendance.deleteMany({ employeeId: req.params.id });
             res.json({ message: 'Employee removed' });
+            */
+            
+            // New logic: Toggle status instead of delete
+            employee.status = employee.status === 'Deactivated' ? 'Active' : 'Deactivated';
+            await employee.save();
+            res.json({ message: `Employee status updated to ${employee.status}` });
         } else {
             res.status(404).json({ message: 'Employee not found' });
         }
@@ -111,7 +131,7 @@ exports.updateAttendanceByHR = async (req, res) => {
             let leaveReverted = 0;
             if (oldStatus === 'Holiday') leaveReverted = 1;
             if (oldStatus === 'Half Day') leaveReverted = 0.5;
-            
+
             let newLeaveCost = 0;
             if (newStatus === 'Holiday') newLeaveCost = 1;
             if (newStatus === 'Half Day') newLeaveCost = 0.5;
@@ -167,22 +187,22 @@ exports.getEodReports = async (req, res) => {
         const reports = await Attendance.find({ eod: { $exists: true, $ne: null, $ne: "" } })
             .populate('employeeId', 'name department employeeId')
             .sort({ date: -1 });
-        
+
         // Find attendance records for employees who were present on the target date
-        const presentRecordsOnTargetDate = await Attendance.find({ 
-            date: targetDate, 
-            status: { $in: ['Present', 'Half Day'] } 
+        const presentRecordsOnTargetDate = await Attendance.find({
+            date: targetDate,
+            status: { $in: ['Present', 'Half Day'] }
         });
 
         // Create a set of IDs for employees who submitted an EOD on the target date
         const submittedEodIds = new Set(presentRecordsOnTargetDate.filter(p => p.eod).map(p => p.employeeId.toString()));
-        
+
         // Create a set of IDs for all employees who were present on the target date
         const presentEmployeeIds = new Set(presentRecordsOnTargetDate.map(p => p.employeeId.toString()));
 
         // Find employees who were present but did not submit an EOD
-        const allEmployees = await Employee.find({});
-        const notSubmittedList = allEmployees.filter(emp => 
+        const allEmployees = await Employee.find({ status: 'Active' });
+        const notSubmittedList = allEmployees.filter(emp =>
             presentEmployeeIds.has(emp._id.toString()) && !submittedEodIds.has(emp._id.toString())
         );
 
@@ -264,12 +284,12 @@ const checkAndResetLeaves = async () => {
     // Check if the current date is in a month after the last reset
     if (currentYear > lastYear || (currentYear === lastYear && currentMonth > lastMonth)) {
         console.log(`New month detected. Resetting leave balances for ${currentMonth}/${currentYear}...`);
-        
+
         await Employee.updateMany({}, { $set: { holidaysLeft: 2 } });
 
         config.lastLeaveReset = { month: currentMonth, year: currentYear };
         await config.save();
-        
+
         console.log("Leave balances have been successfully reset.");
     }
 };
@@ -283,9 +303,40 @@ exports.createAnnouncement = async (req, res) => {
             createdBy: req.user.id, // The logged-in HR user
         });
         await announcement.save();
+
+        // Respond immediately to the HR user
         res.status(201).json(announcement);
+
+        // Send emails in the background (no await here)
+        (async () => {
+            try {
+                const employees = await Employee.find({ status: 'Active' }).select('email');
+                const emails = employees.map(emp => emp.email).filter(email => email);
+
+                if (emails.length > 0) {
+                    await sendEmail({
+                        to: emails, // SendGrid can take an array of emails
+                        subject: `📢 New Announcement: ${title}`,
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px; color: #433020; background-color: #fffbf5;">
+                                <h2 style="color: #8a6144; border-bottom: 2px solid #8a6144; padding-bottom: 10px;">New Announcement from AVANI ENTERPRISES</h2>
+                                <h3 style="margin-top: 20px;">${title}</h3>
+                                <p style="line-height: 1.6;">${content}</p>
+                                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                                <p style="font-size: 0.8em; color: #8a6144;">This is an automated notification from the HR Portal. Please log in to view full details.</p>
+                            </div>
+                        `,
+                    });
+                }
+            } catch (emailError) {
+                console.error("Failed to send announcement emails in background:", emailError);
+            }
+        })();
+
     } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
+        if (!res.headersSent) {
+            res.status(500).json({ message: 'Server Error: ' + error.message });
+        }
     }
 };
 
@@ -301,7 +352,7 @@ exports.getAllAnnouncements = async (req, res) => {
 
 exports.getAnalyticsData = async (req, res) => {
     try {
-        const employees = await Employee.find({});
+        const employees = await Employee.find({ status: 'Active' });
         const now = new Date();
         const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
         const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
@@ -315,9 +366,9 @@ exports.getAnalyticsData = async (req, res) => {
         for (let i = 1; i <= now.getDate(); i++) {
             const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), i));
             const dayString = day.toISOString().split('T')[0];
-            
+
             const recordsForDay = monthlyAttendance.filter(a => a.date.toISOString().startsWith(dayString));
-            
+
             attendanceTrends.push({
                 name: `${day.toLocaleString('default', { month: 'short' })} ${i}`,
                 Present: recordsForDay.filter(r => r.status === 'Present').length,
@@ -397,7 +448,7 @@ exports.getEmployeeAnalytics = async (req, res) => {
             if (att.checkIn) {
                 const checkInTime = new Date(att.checkIn);
                 const checkInMinutes = checkInTime.getUTCHours() * 60 + checkInTime.getUTCMinutes();
-                
+
                 totalMinutes += checkInMinutes;
                 checkInCount++;
 
@@ -444,7 +495,7 @@ exports.getConsolidatedAnalytics = async (req, res) => {
     const daysInMonth = endDate.getUTCDate();
 
     try {
-        const employees = await Employee.find({});
+        const employees = await Employee.find({ status: 'Active' });
         const monthlyAttendance = await Attendance.find({
             date: { $gte: startDate, $lte: endDate }
         }).populate('employeeId');
@@ -465,7 +516,7 @@ exports.getConsolidatedAnalytics = async (req, res) => {
         for (let i = 1; i <= daysInMonth; i++) {
             const dayString = new Date(Date.UTC(year, month - 1, i)).toISOString().split('T')[0];
             const recordsForDay = monthlyAttendance.filter(a => a.date.toISOString().startsWith(dayString));
-            
+
             const totalSignIns = recordsForDay.filter(r => r.checkIn).length;
             const timelySignIns = recordsForDay.filter(r => {
                 if (!r.checkIn) return false;
@@ -486,7 +537,7 @@ exports.getConsolidatedAnalytics = async (req, res) => {
 
         const consolidatedData = employees.map(emp => {
             const empAttendance = monthlyAttendance.filter(att => att.employeeId && att.employeeId._id.toString() === emp._id.toString());
-            
+
             const lateSignInsList = empAttendance.filter(att => {
                 if (!att.checkIn) return false;
                 const checkInIST = new Date(new Date(att.checkIn).getTime() + IST_OFFSET_MS);
@@ -566,10 +617,10 @@ exports.updateLeaveStatus = async (req, res) => {
         leaveRequest.status = status;
         leaveRequest.reviewedBy = req.user.id;
         await leaveRequest.save();
-        
+
         if (status === 'Approved') {
             const employee = await Employee.findById(leaveRequest.employeeId);
-            
+
             employee.holidaysLeft -= 1;
             await employee.save();
 
@@ -595,7 +646,7 @@ exports.calculatePayroll = async (req, res) => {
     const endDate = new Date(Date.UTC(year, month, 0));
 
     try {
-        const employees = await Employee.find({});
+        const employees = await Employee.find({ status: 'Active' });
         const monthlyAttendance = await Attendance.find({
             date: { $gte: startDate, $lte: endDate }
         });
@@ -617,13 +668,13 @@ exports.calculatePayroll = async (req, res) => {
                     const checkInUTC = new Date(att.checkIn);
                     const checkInIST = new Date(checkInUTC.getTime() + IST_OFFSET_MS);
                     const checkInMinutes = checkInIST.getUTCHours() * 60 + checkInIST.getUTCMinutes();
-                    
+
                     let lateFine = 0;
                     if (checkInMinutes >= 556 && checkInMinutes <= 615) lateFine = 100;      // 9:16 - 10:15
                     else if (checkInMinutes > 615 && checkInMinutes <= 675) lateFine = 200; // 10:16 - 11:15
                     else if (checkInMinutes > 675 && checkInMinutes <= 720) lateFine = 300; // 11:16 - 12:00
                     else if (checkInMinutes > 720) lateFine = (dailySalary / 2);              // After 12:00 PM
-                    
+
                     if (lateFine > 0) {
                         lateDeductions += lateFine;
                         deductionLog.push({ date: eventDate, reason: 'Late Sign-in', amount: Math.round(lateFine) });
@@ -692,9 +743,9 @@ exports.getEmployeeRankings = async (req, res) => {
 
         const employeeStats = employees.map(emp => {
             const empAttendance = monthlyAttendance.filter(a => a.employeeId.toString() === emp._id.toString());
-            
+
             const totalSignIns = empAttendance.filter(att => att.checkIn).length;
-            
+
             const IST_OFFSET_MS = 330 * 60 * 1000;
             const LATE_THRESHOLD_MINUTES = 555; // 9:15 AM
 
@@ -731,7 +782,7 @@ exports.getEmployeeRankings = async (req, res) => {
             }
             return sorted;
         };
-        
+
         const timelySignInRankings = assignRanks(employeeStats, 'timelySignInPercentage');
         const eodSubmissionRankings = assignRanks(employeeStats, 'eodSubmissionPercentage');
 

@@ -15,40 +15,61 @@ const axios = require("axios");
 
 // @desc    Get logged-in employee's profile
 exports.getEmployeeProfile = async (req, res) => {
-    const employee = await Employee.findById(req.user.id).select('-password');
-    if (employee) {
-        res.json(employee);
-    } else {
-        res.status(404).json({ message: 'Employee not found' });
-    }
+  const employee = await Employee.findById(req.user.id).select('-password');
+  if (employee) {
+    res.json(employee);
+  } else {
+    res.status(404).json({ message: 'Employee not found' });
+  }
 };
 
 exports.updateEmployeeProfile = async (req, res) => {
-    const employee = await Employee.findById(req.user.id);
+  const employee = await Employee.findById(req.user.id);
 
-    if (employee) {
-        employee.name = req.body.name || employee.name;
-        employee.phone = req.body.phone || employee.phone;
-        employee.address = req.body.address || employee.address;
-        
-        // Handle new profile picture and document URLs
-        if(req.body.profilePictureUrl) employee.profilePictureUrl = req.body.profilePictureUrl;
-        if(req.body.idProofUrl) employee.idProofUrl = req.body.idProofUrl;
-        if(req.body.documents) employee.documents = req.body.documents;
+  if (employee) {
+    employee.name = req.body.name || employee.name;
+    employee.phone = req.body.phone || employee.phone;
+    employee.address = req.body.address || employee.address;
 
-        if (req.body.password) {
-            employee.password = req.body.password;
-        }
-        const updatedEmployee = await employee.save();
-        res.json({
-            _id: updatedEmployee._id,
-            name: updatedEmployee.name,
-            email: updatedEmployee.email,
-            token: generateToken(updatedEmployee._id, 'employee'),
-        });
-    } else {
-        res.status(404).json({ message: 'Employee not found' });
+    // Handle new profile picture and document URLs
+    if (req.body.profilePictureUrl) employee.profilePictureUrl = req.body.profilePictureUrl;
+    if (req.body.idProofUrl) employee.idProofUrl = req.body.idProofUrl;
+    if (req.body.documents) employee.documents = req.body.documents;
+
+    // Handle bank and tax details (Employees can fill once, then read-only)
+    if (req.body.bankDetails) {
+      // Only allow updating if current bankName is empty (initial fill)
+      if (!employee.bankDetails || !employee.bankDetails.bankName) {
+        employee.bankDetails = {
+          bankName: req.body.bankDetails.bankName || employee.bankDetails?.bankName,
+          accountNumber: req.body.bankDetails.accountNumber || employee.bankDetails?.accountNumber,
+          ifscCode: req.body.bankDetails.ifscCode || employee.bankDetails?.ifscCode,
+          accountHolderName: req.body.bankDetails.accountHolderName || employee.bankDetails?.accountHolderName || employee.name
+        };
+      }
     }
+
+    if (req.body.upiId) {
+      if (!employee.upiId) employee.upiId = req.body.upiId;
+    }
+
+    if (req.body.panCardNumber) {
+      if (!employee.panCardNumber) employee.panCardNumber = req.body.panCardNumber;
+    }
+
+    if (req.body.password) {
+      employee.password = req.body.password;
+    }
+    const updatedEmployee = await employee.save();
+    res.json({
+      _id: updatedEmployee._id,
+      name: updatedEmployee.name,
+      email: updatedEmployee.email,
+      token: generateToken(updatedEmployee._id, 'employee'),
+    });
+  } else {
+    res.status(404).json({ message: 'Employee not found' });
+  }
 };
 
 function parseDeviceModel(userAgent) {
@@ -193,52 +214,52 @@ exports.markAttendance = async (req, res) => {
 };
 
 exports.getPenalties = async (req, res) => {
-    try {
-        const { month } = req.query;
-        const start = new Date(`${month}-01T00:00:00Z`);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
+  try {
+    const { month } = req.query;
+    const start = new Date(`${month}-01T00:00:00Z`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
 
-        const penalties = await LoginRecord.aggregate([
-            {
-                $match: {
-                    action: { $in: ['Check-in', 'Check-out'] },
-                    isTouchDevice: true,
-                    createdAt: { $gte: start, $lt: end }
-                }
-            },
-            {
-                $group: {
-                    _id: { employeeId: "$employeeId" },
-                    penaltyCount: { $sum: 1 },
-                    dates: { $push: { action: "$action", createdAt: "$createdAt", ip: "$ipAddress" } }
-                }
-            },
-            {
-                $lookup: {
-                    from: "employees",
-                    localField: "_id.employeeId",
-                    foreignField: "_id",
-                    as: "employee"
-                }
-            },
-            { $unwind: "$employee" },
-            {
-  $project: {
-    employeeId: "$employee.employeeId",
-    name: "$employee.name",
-    department: "$employee.department",
-    penaltyCount: 1,
-    dates: { $ifNull: ["$dates", []] } // ✅ Always return [] if null/undefined
+    const penalties = await LoginRecord.aggregate([
+      {
+        $match: {
+          action: { $in: ['Check-in', 'Check-out'] },
+          isTouchDevice: true,
+          createdAt: { $gte: start, $lt: end }
+        }
+      },
+      {
+        $group: {
+          _id: { employeeId: "$employeeId" },
+          penaltyCount: { $sum: 1 },
+          dates: { $push: { action: "$action", createdAt: "$createdAt", ip: "$ipAddress" } }
+        }
+      },
+      {
+        $lookup: {
+          from: "employees",
+          localField: "_id.employeeId",
+          foreignField: "_id",
+          as: "employee"
+        }
+      },
+      { $unwind: "$employee" },
+      {
+        $project: {
+          employeeId: "$employee.employeeId",
+          name: "$employee.name",
+          department: "$employee.department",
+          penaltyCount: 1,
+          dates: { $ifNull: ["$dates", []] } // ✅ Always return [] if null/undefined
+        }
+      }
+
+    ]);
+
+    res.json(penalties);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching penalties: " + err.message });
   }
-}
-
-        ]);
-
-        res.json(penalties);
-    } catch (err) {
-        res.status(500).json({ message: "Error fetching penalties: " + err.message });
-    }
 };
 
 
@@ -247,141 +268,141 @@ exports.getPenalties = async (req, res) => {
 
 // @desc    Get employee's attendance history
 exports.getAttendanceHistory = async (req, res) => {
-    try {
-        // --- FIX: Populate the employeeId field to include name and department ---
-        const attendance = await Attendance.find({ employeeId: req.user.id })
-            .populate('employeeId', 'name department') // This line is added
-            .sort({ date: -1 });
-        res.json(attendance);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+  try {
+    // --- FIX: Populate the employeeId field to include name and department ---
+    const attendance = await Attendance.find({ employeeId: req.user.id })
+      .populate('employeeId', 'name department') // This line is added
+      .sort({ date: -1 });
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 exports.getAnnouncementsForEmployee = async (req, res) => {
-    try {
-        const allAnnouncements = await Announcement.find().sort({ createdAt: -1 });
-        const employee = await Employee.findById(req.user.id).select('readAnnouncements');
+  try {
+    const allAnnouncements = await Announcement.find().sort({ createdAt: -1 });
+    const employee = await Employee.findById(req.user.id).select('readAnnouncements');
 
-        // Add an 'isRead' flag to each announcement for the frontend
-        const announcementsWithStatus = allAnnouncements.map(ann => ({
-            ...ann.toObject(),
-            isRead: employee.readAnnouncements.includes(ann._id),
-        }));
+    // Add an 'isRead' flag to each announcement for the frontend
+    const announcementsWithStatus = allAnnouncements.map(ann => ({
+      ...ann.toObject(),
+      isRead: employee.readAnnouncements.includes(ann._id),
+    }));
 
-        res.json(announcementsWithStatus);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+    res.json(announcementsWithStatus);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 // @desc    Mark announcements as read for the logged-in employee
 exports.markAnnouncementsAsRead = async (req, res) => {
-    try {
-        // Use $addToSet to add the current announcement ID to the readAnnouncements array,
-        // preventing duplicates. We'll just mark all as read for simplicity.
-        await Employee.findByIdAndUpdate(req.user.id, {
-            $set: { readAnnouncements: await Announcement.find().distinct('_id') }
-        });
-        res.status(200).json({ message: 'All announcements marked as read.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+  try {
+    // Use $addToSet to add the current announcement ID to the readAnnouncements array,
+    // preventing duplicates. We'll just mark all as read for simplicity.
+    await Employee.findByIdAndUpdate(req.user.id, {
+      $set: { readAnnouncements: await Announcement.find().distinct('_id') }
+    });
+    res.status(200).json({ message: 'All announcements marked as read.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 
 
 exports.applyForLeave = async (req, res) => {
-    const { leaveDate, reason } = req.body;
-    try {
-        const newLeaveRequest = new LeaveRequest({
-            employeeId: req.user.id,
-            leaveDate,
-            reason,
-        });
-        await newLeaveRequest.save();
-        res.status(201).json(newLeaveRequest);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+  const { leaveDate, reason } = req.body;
+  try {
+    const newLeaveRequest = new LeaveRequest({
+      employeeId: req.user.id,
+      leaveDate,
+      reason,
+    });
+    await newLeaveRequest.save();
+    res.status(201).json(newLeaveRequest);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 // --- NEW FUNCTION ---
 // @desc    Get the leave application history for the logged-in employee
 exports.getLeaveHistory = async (req, res) => {
-    try {
-        const leaveHistory = await LeaveRequest.find({ employeeId: req.user.id })
-            .sort({ createdAt: -1 }); // Show the most recent applications first
-        res.json(leaveHistory);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+  try {
+    const leaveHistory = await LeaveRequest.find({ employeeId: req.user.id })
+      .sort({ createdAt: -1 }); // Show the most recent applications first
+    res.json(leaveHistory);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 exports.getEmployeeRankings = async (req, res) => {
-    try {
-        // --- FIX 1: Use the month and year from the request query ---
-        const { month, year } = req.query;
+  try {
+    // --- FIX 1: Use the month and year from the request query ---
+    const { month, year } = req.query;
 
-        const startDate = new Date(Date.UTC(year, month - 1, 1));
-        const endDate = new Date(Date.UTC(year, month, 0));
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0));
 
-        const employees = await Employee.find({}).select('name employeeId');
-        const monthlyAttendance = await Attendance.find({
-            date: { $gte: startDate, $lte: endDate }
-        });
+    const employees = await Employee.find({}).select('name employeeId');
+    const monthlyAttendance = await Attendance.find({
+      date: { $gte: startDate, $lte: endDate }
+    });
 
-        const employeeStats = employees.map(emp => {
-            const empAttendance = monthlyAttendance.filter(a => a.employeeId.toString() === emp._id.toString());
-            
-            const totalSignIns = empAttendance.filter(att => att.checkIn).length;
-            
-            const IST_OFFSET_MS = 330 * 60 * 1000;
-            const LATE_THRESHOLD_MINUTES = 555; // 9:15 AM
+    const employeeStats = employees.map(emp => {
+      const empAttendance = monthlyAttendance.filter(a => a.employeeId.toString() === emp._id.toString());
 
-            const lateSignIns = empAttendance.filter(att => {
-                if (!att.checkIn) return false;
-                const checkInUTC = new Date(att.checkIn);
-                const checkInIST = new Date(checkInUTC.getTime() + IST_OFFSET_MS);
-                const checkInMinutes = checkInIST.getUTCHours() * 60 + checkInIST.getUTCMinutes();
-                return checkInMinutes > LATE_THRESHOLD_MINUTES;
-            }).length;
+      const totalSignIns = empAttendance.filter(att => att.checkIn).length;
 
-            const totalPresentDays = empAttendance.filter(r => r.status === 'Present' || r.status === 'Half Day').length;
-            const eodSubmissions = empAttendance.filter(r => r.eod).length;
+      const IST_OFFSET_MS = 330 * 60 * 1000;
+      const LATE_THRESHOLD_MINUTES = 555; // 9:15 AM
 
-            return {
-                _id: emp._id,
-                name: emp.name,
-                employeeId: emp.employeeId,
-                timelySignInPercentage: totalSignIns > 0 ? Math.round(((totalSignIns - lateSignIns) / totalSignIns) * 100) : 0,
-                eodSubmissionPercentage: totalPresentDays > 0 ? Math.round((eodSubmissions / totalPresentDays) * 100) : 0,
-            };
-        });
+      const lateSignIns = empAttendance.filter(att => {
+        if (!att.checkIn) return false;
+        const checkInUTC = new Date(att.checkIn);
+        const checkInIST = new Date(checkInUTC.getTime() + IST_OFFSET_MS);
+        const checkInMinutes = checkInIST.getUTCHours() * 60 + checkInIST.getUTCMinutes();
+        return checkInMinutes > LATE_THRESHOLD_MINUTES;
+      }).length;
 
-        // --- FIX 2: Corrected logic for handling ties ---
-        const assignRanks = (stats, key) => {
-            const sorted = [...stats].sort((a, b) => b[key] - a[key]);
-            let rank = 1;
-            for (let i = 0; i < sorted.length; i++) {
-                // If not the first person and their score is lower than the person before them, update the rank
-                if (i > 0 && sorted[i][key] < sorted[i - 1][key]) {
-                    rank = i + 1;
-                }
-                sorted[i][`${key}Rank`] = rank;
-            }
-            return sorted;
-        };
-        
-        const timelySignInRankings = assignRanks(employeeStats, 'timelySignInPercentage');
-        const eodSubmissionRankings = assignRanks(employeeStats, 'eodSubmissionPercentage');
+      const totalPresentDays = empAttendance.filter(r => r.status === 'Present' || r.status === 'Half Day').length;
+      const eodSubmissions = empAttendance.filter(r => r.eod).length;
 
-        res.json({ timelySignInRankings, eodSubmissionRankings });
+      return {
+        _id: emp._id,
+        name: emp.name,
+        employeeId: emp.employeeId,
+        timelySignInPercentage: totalSignIns > 0 ? Math.round(((totalSignIns - lateSignIns) / totalSignIns) * 100) : 0,
+        eodSubmissionPercentage: totalPresentDays > 0 ? Math.round((eodSubmissions / totalPresentDays) * 100) : 0,
+      };
+    });
 
-    } catch (error) {
-        console.error("Error in getEmployeeRankings:", error);
-        res.status(500).json({ message: 'Server Error: ' + error.message });
-    }
+    // --- FIX 2: Corrected logic for handling ties ---
+    const assignRanks = (stats, key) => {
+      const sorted = [...stats].sort((a, b) => b[key] - a[key]);
+      let rank = 1;
+      for (let i = 0; i < sorted.length; i++) {
+        // If not the first person and their score is lower than the person before them, update the rank
+        if (i > 0 && sorted[i][key] < sorted[i - 1][key]) {
+          rank = i + 1;
+        }
+        sorted[i][`${key}Rank`] = rank;
+      }
+      return sorted;
+    };
+
+    const timelySignInRankings = assignRanks(employeeStats, 'timelySignInPercentage');
+    const eodSubmissionRankings = assignRanks(employeeStats, 'eodSubmissionPercentage');
+
+    res.json({ timelySignInRankings, eodSubmissionRankings });
+
+  } catch (error) {
+    console.error("Error in getEmployeeRankings:", error);
+    res.status(500).json({ message: 'Server Error: ' + error.message });
+  }
 };
 
 exports.getEmployeePenalties = async (req, res) => {

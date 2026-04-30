@@ -89,7 +89,7 @@
 //         }
 //     };
 
-  
+
 // const handleCheckIn = async (status) => {
 //     if (!("geolocation" in navigator)) {
 //         alert("Geolocation is not supported in this browser!");
@@ -328,6 +328,8 @@ const EmployeeDashboard = () => {
     const [eod, setEod] = useState('');
     const [notes, setNotes] = useState('');
     const [requestedLeaveType, setRequestedLeaveType] = useState(null);
+    const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
+    const [filterYear, setFilterYear] = useState(new Date().getFullYear());
     const { theme } = useTheme();
 
     const [ip, setIp] = useState("");
@@ -375,10 +377,8 @@ const EmployeeDashboard = () => {
     };
 
     useEffect(() => {
-        if (!isMobile) {
-            fetchData();
-        }
-    }, [user, isMobile]);
+        fetchData();
+    }, [user]);
 
     const handleLeaveRequest = (leaveType) => {
         const requiredLeaves = leaveType === 'Holiday' ? 1 : 0.5;
@@ -400,6 +400,12 @@ const EmployeeDashboard = () => {
 
         if (isCheckingIn) return;
         setIsCheckingIn(true);
+
+        const geoOptions = {
+            enableHighAccuracy: false, // high accuracy on desktops often delays location fix
+            timeout: 8000,             // fail fast instead of hanging
+            maximumAge: 60000          // reuse a recent fix if available
+        };
 
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
@@ -423,8 +429,6 @@ const EmployeeDashboard = () => {
                     setNotes('');
                     setTodayAttendance(newRecord);
 
-                    const { data: updatedProfile } = await api.get('/employee/profile');
-                    setProfile(updatedProfile);
                     setAttendance(prev => [newRecord, ...prev.filter(a => a._id !== newRecord._id)]);
                 } catch (error) {
                     console.error("Check-in failed:", error);
@@ -438,7 +442,7 @@ const EmployeeDashboard = () => {
                 console.error("GPS Error:", err);
                 setIsCheckingIn(false);
             },
-            { enableHighAccuracy: true }
+            geoOptions
         );
     };
 
@@ -501,27 +505,73 @@ const EmployeeDashboard = () => {
 
     const isAfterMidday = new Date().getHours() >= 12;
 
+    const monthsList = [
+        { value: 'all', label: 'All Months' },
+        { value: 1, label: 'January' },
+        { value: 2, label: 'February' },
+        { value: 3, label: 'March' },
+        { value: 4, label: 'April' },
+        { value: 5, label: 'May' },
+        { value: 6, label: 'June' },
+        { value: 7, label: 'July' },
+        { value: 8, label: 'August' },
+        { value: 9, label: 'September' },
+        { value: 10, label: 'October' },
+        { value: 11, label: 'November' },
+        { value: 12, label: 'December' }
+    ];
+
+    const filteredAttendance = attendance.filter(record => {
+        const recordDate = new Date(record.date);
+        const recordMonth = recordDate.getUTCMonth() + 1;
+        const recordYear = recordDate.getUTCFullYear();
+
+        const monthMatch = filterMonth === 'all' || recordMonth === parseInt(filterMonth);
+        const yearMatch = !filterYear || recordYear === parseInt(filterYear);
+
+        return monthMatch && yearMatch;
+    });
+
+    // Mobile restriction
     if (isMobile) {
         return (
-            <div className="flex flex-col items-center justify-center h-[60vh] text-center p-4">
-                <h1 className="text-2xl font-bold text-red-600">Access Restricted on Mobile</h1>
-                <p className="mt-4 text-gray-700 dark:text-gray-300">Please use a desktop computer or enable "Desktop site" in your mobile browser to access the dashboard.</p>
+            <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-gradient-to-br from-[#fff5e6] to-[#f5e6d3] dark:from-gray-900 dark:to-black">
+                <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-white/50 max-w-sm">
+                    <div className="text-red-500 text-6xl mb-4 text-center flex justify-center">🚫</div>
+                    <h1 className="text-2xl font-bold text-[#433020] dark:text-white mb-4">Access Restricted</h1>
+                    <p className="text-[#8a6144] dark:text-gray-300">
+                        The Employee Dashboard is restricted on mobile devices. Please use a desktop computer to manage your attendance and view reports.
+                    </p>
+                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                            Authorized access only via Desktop Systems.
+                        </p>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    if (loading) return <div className="flex justify-center items-center h-64"><Spinner /></div>;
+    if (loading) return (
+        <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#fff5e6] via-white to-[#f5e6d3] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-white/50">
+                <Spinner />
+            </div>
+        </div>
+    );
 
     // --- Main conditional rendering for the loader ---
-  if (isCheckingIn) {
-  return <EmployeeLoader name={profile?.name || user?.name} action={isCheckOutModalOpen ? "checkout" : "checkin"} />;
-}
+    if (isCheckingIn) {
+        return <EmployeeLoader name={profile?.name || user?.name} action={isCheckOutModalOpen ? "checkout" : "checkin"} />;
+    }
 
 
     return (
-        <div className={`min-h-screen p-6 space-y-6 bg-gradient-to-br rounded-b-[2rem] shadow-lg ${theme === 'dark' ? 'from-gray-900 to-black text-white' : 'from-blue-100 to-white text-gray-800'}`}>
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}!</h1>
+        <div className={`min-h-screen p-6 space-y-6 bg-gradient-to-br rounded-b-[2rem] shadow-lg ${theme === 'dark' ? 'from-gray-900 to-black text-white' : 'from-[#fff5e6] to-[#f5e6d3] text-gray-800'}`}>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-4xl font-extrabold text-[#433020] dark:text-white drop-shadow-sm tracking-tight">
+                    Welcome, <span className="text-[#8a6144]">{user?.name}</span>!
+                </h1>
                 <ThemeToggle />
             </div>
 
@@ -532,8 +582,11 @@ const EmployeeDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h3 className="font-semibold text-lg mb-4">Today's Attendance</h3>
+                <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 dark:text-white p-8 rounded-3xl shadow-xl shadow-[#433020]/5 border border-white/50 mt-4 transition-all hover:shadow-2xl hover:shadow-[#433020]/10">
+                    <h3 className="text-2xl font-bold text-[#433020] dark:text-gray-100 flex items-center gap-2 mb-6">
+                        <span className="w-2 h-8 bg-[#8a6144] rounded-full inline-block"></span>
+                        Today's Attendance
+                    </h3>
                     {todayAttendance ? (
                         <div className="space-y-2">
                             <p>Status: <span className="font-bold text-green-600 dark:text-green-400">{todayAttendance.status}</span></p>
@@ -542,16 +595,42 @@ const EmployeeDashboard = () => {
                             {todayAttendance.checkOut ? (
                                 <p>Checked Out: <span className="font-bold">{new Date(todayAttendance.checkOut).toLocaleTimeString()}</span></p>
                             ) : (
-                                <Button onClick={() => setCheckOutModalOpen(true)} variant="danger" className="mt-2" disabled={isCheckingIn}>Check Out</Button>
+                                <Button onClick={() => setCheckOutModalOpen(true)} variant="brand" className="mt-2" disabled={isCheckingIn}>Check Out</Button>
                             )}
                         </div>
                     ) : (
-                        <Button onClick={() => setCheckInModalOpen(true)} variant="primary" disabled={isCheckingIn}>Check In for Today</Button>
+                        <Button onClick={() => setCheckInModalOpen(true)} variant="brand" disabled={isCheckingIn}>Check In for Today</Button>
                     )}
                 </div>
             </div>
 
-            <AttendanceLog attendance={attendance} />
+            <div className="bg-white/80 backdrop-blur-md dark:bg-gray-800 p-8 rounded-3xl shadow-xl shadow-[#433020]/5 border border-white/50 transition-all hover:shadow-2xl hover:shadow-[#433020]/10">
+                <div className="flex flex-wrap gap-6 items-end mb-8">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-bold text-[#8a6144] mb-3 font-mono uppercase tracking-widest">Filter by Month</label>
+                        <select
+                            value={filterMonth}
+                            onChange={(e) => setFilterMonth(e.target.value)}
+                            className="w-full px-5 py-3 border-2 border-[#8a6144]/10 rounded-2xl bg-[#fffcf7]/50 dark:bg-gray-700/50 dark:text-white focus:ring-4 focus:ring-[#8a6144]/10 focus:border-[#8a6144] outline-none transition-all duration-300 appearance-none shadow-inner cursor-pointer font-medium"
+                        >
+                            {monthsList.map(m => (
+                                <option key={m.value} value={m.value}>{m.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-bold text-[#8a6144] mb-3 font-mono uppercase tracking-widest">Filter by Year</label>
+                        <input
+                            type="number"
+                            value={filterYear}
+                            onChange={(e) => setFilterYear(e.target.value)}
+                            className="w-full px-5 py-3 border-2 border-[#8a6144]/10 rounded-2xl bg-[#fffcf7]/50 dark:bg-gray-700/50 dark:text-white focus:ring-4 focus:ring-[#8a6144]/10 focus:border-[#8a6144] outline-none transition-all duration-300 shadow-inner font-medium"
+                            placeholder="Year"
+                        />
+                    </div>
+                </div>
+                <AttendanceLog attendance={filteredAttendance} showHeader={false} />
+            </div>
 
             {/* Modals */}
             <Modal isOpen={isCheckInModalOpen} onClose={() => setCheckInModalOpen(false)} title="Mark Your Attendance">

@@ -1,28 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getAllEmployees,
-    getEmployeeById,
-    updateEmployeeByHR,
-    deleteEmployee,
-    getAttendanceForAll,
-    updateAttendanceByHR,
-    getEodReports,
-    saveSalaryRecord,
-        updateSalaryRecord, // <-- 
-    getSalaryRecords,
-     createAnnouncement,
-    getAllAnnouncements,
-    // getAnalyticsData ,
-    getEmployeeAnalytics,
-    getConsolidatedAnalytics,
-    getLoginData,
-    getPendingLeaves,
-      // <-- Import new function
-    updateLeaveStatus  ,
-    getPenalties,
-    getEmployeePenalties,
-    calculatePayroll,getEmployeeRankings
+  getAllEmployees,
+  getEmployeeById,
+  updateEmployeeByHR,
+  deleteEmployee,
+  getAttendanceForAll,
+  updateAttendanceByHR,
+  getEodReports,
+  saveSalaryRecord,
+  updateSalaryRecord, // <-- 
+  getSalaryRecords,
+  createAnnouncement,
+  getAllAnnouncements,
+  // getAnalyticsData ,
+  getEmployeeAnalytics,
+  getConsolidatedAnalytics,
+  getLoginData,
+  getPendingLeaves,
+  // <-- Import new function
+  updateLeaveStatus,
+  getPenalties,
+  getEmployeePenalties,
+  calculatePayroll, getEmployeeRankings
 } = require('../controllers/hrController');
 
 const { protectHR } = require('../middleware/authMiddleware');
